@@ -11,9 +11,6 @@ GREEN = (54,128,45)
 field_width = (screen_width * 120) / 140
 field_height = (screen_height * 85) / 100
 
-# ??? unused
-cancha_centro = (screen_width * 9.15) / 120
-
 # numeric values that were constants 10 and 8 for a base resolution 1920x1080 rescalated for dynamic res.
 grosor = int(screen_width * screen_height/ 207360)
 grosor2 = int(screen_width * screen_height/ 259200)
@@ -33,8 +30,6 @@ area_padding2 = area_padding1 + (7.5625 * goal_area_height)/85
 
 
 the_capricious = (screen_width * screen_height) / 110000
-
-
 
 clock = pygame.time.Clock()
 pygame.init()
