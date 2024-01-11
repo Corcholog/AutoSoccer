@@ -70,8 +70,8 @@ class SoccerField:
         self.players = players
         self.center_circle = [screen_width/2,screen_height/2]
         self.middle_line = ([screen_width/2, screen_height-field_height], [screen_width/2, field_height])
-        self.upper_sideline = ([screen_width-field_width,field_height], [field_width,field_height])
-        self.bottom_sideline = ([screen_width-field_width,screen_height-field_height], [field_width,screen_height-field_height])
+        self.bottom_sideline = ([screen_width-field_width,field_height], [field_width,field_height])
+        self.upper_sideline = ([screen_width-field_width,screen_height-field_height], [field_width,screen_height-field_height])
         self.left_endline = ([field_width, screen_height-field_height], [field_width, field_height])
         self.right_endline = ([screen_width-field_width, screen_height-field_height], [screen_width-field_width, field_height])
         self.ball_initial_pos = [screen_width/2,screen_height/2]
@@ -116,7 +116,7 @@ class SoccerField:
         pygame.draw.line(screen, WHITE, self.middle_line[0], self.middle_line[1], grosor)
 
         # field sidelines
-        #pygame.draw.line(screen, WHITE, self.upper_sideline[0], self.upper_sideline[1], grosor)
+        pygame.draw.line(screen, WHITE, self.upper_sideline[0], self.upper_sideline[1], grosor)
         pygame.draw.line(screen, WHITE, self.bottom_sideline[0], self.bottom_sideline[1], grosor)
 
         # field endlines
@@ -191,25 +191,37 @@ class SoccerField:
         self.ball.draw()
 
     def goal(self) -> None:
-        # WIP
-        return
+        
+        if (self.ball.x < self.ls_arco_area_singlelane[0][0]) and (self.ball.y > self.ls_arco_area_singlelane[0][1] and self.ball.y < self.ls_arco_area_singlelane[1][1]):
+            print(" GOL DEL LADO IZQUIERDO ")
+            
+        elif self.ball.x > self.rs_arco_area_singlelane[0][0] and (self.ball.y > self.rs_arco_area_singlelane[0][1] and self.ball.y < self.rs_arco_area_singlelane[1][1]):
+            print(" GOL DEL LADO DERECHO ")
+            
+       
+            
+
 
     def throw_in(self) -> None:
 
-        if self.ball.y > self.upper_sideline[0][1]:
+        if self.ball.y < self.upper_sideline[0][1]: 
             self.ball.reposition([self.ball.x, self.upper_sideline[0][1]])
             self.ball.reset_speed()
             # mandar jugador atras de la pelota y hacer player.throw_in()
 
-        elif self.ball.y < self.bottom_sideline[0][1]:
+        elif self.ball.y > self.bottom_sideline[0][1]:
             self.ball.reposition([self.ball.x, self.bottom_sideline[0][1]])
             self.ball.reset_speed()
             # mandar jugador atras de la pelota y hacer player.throw_in()
+            
         return
     
+
+
     def corner(self) -> None:
-        
+
         return
+
 field = SoccerField(15)
 
 while True:
@@ -220,5 +232,6 @@ while True:
     screen.fill(GREEN)
     field.draw()
     field.throw_in()
+    field.goal()
     clock.tick(60)  # limits FPS to 60
     pygame.display.flip()
