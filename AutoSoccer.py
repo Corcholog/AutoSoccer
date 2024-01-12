@@ -1,5 +1,7 @@
-import pygame, sys
+import pygame, sys, threading, time, random
 from screeninfo import get_monitors
+from datetime import datetime
+
 monitor = get_monitors()
 
 screen_width = monitor[0].width
@@ -31,25 +33,31 @@ area_padding2 = area_padding1 + (7.5625 * goal_area_height)/85
 
 the_capricious = (screen_width * screen_height) / 110000
 
-clock = pygame.time.Clock()
+
+
 pygame.init()
+font_size = 36
+font = pygame.font.Font(None, font_size)
+clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
 ball_img = pygame.image.load("src/img/ball.png")
+player_1_img = pygame.image.load("src/img/player_1.jpg")
 
 class Ball: # Que sea un thread y en el while true haga el move() mientras la velocidad no sea 0 y cuando lo sea que se duerma y la despiertan con un hit
-    def __init__(self, pos: list[float]) -> None:
+    def __init__(self, pos: list[float], coef) -> None:
         self.speed = [0.0, 0.0]
         self.x = pos[0]
         self.y = pos[1]
+        self.coef = coef
         self.last_touch = None
         self.image = ball_img
-        self.scaled_ball = pygame.transform.scale(ball_img, (50, 50)) # to-do: rescalar dinamicamente
+        self.scaled_ball = pygame.transform.scale(ball_img, (35, 35)) # to-do: rescalar dinamicamente
         self.img_rect = self.scaled_ball.get_rect(center=(self.x, self.y))
 
     def reposition(self, pos: list[float]) -> None:
         self.x = pos[0]
         self.y = pos[1]
-        self.img_rect.topleft = (self.x, self.y)
+        self.img_rect = self.scaled_ball.get_rect(center=(self.x, self.y))
 
     def draw(self) -> None:
         screen.blit(self.scaled_ball, self.img_rect)
@@ -61,23 +69,28 @@ class Ball: # Que sea un thread y en el while true haga el move() mientras la ve
         self.last_touch = team_id
         self.speed = speed
     
-    def move(self, coef) -> None:
+    def move(self) -> None:
         if abs(self.speed[0]) > 0.005 or abs(self.speed[1] > 0.005): 
             self.x = self.x + self.speed[0]
             self.y = self.y + self.speed[1]
             self.reposition([self.x, self.y])
-            self.speed[0] = self.speed[0] - self.speed[0] * coef
-            self.speed[1] = self.speed[1] - self.speed[1] * coef
+            self.speed[0] = self.speed[0] - self.speed[0] * self.coef
+            self.speed[1] = self.speed[1] - self.speed[1] * self.coef
         else:
             self.speed[0] = 0
             self.speed[1] = 0
 
 class SoccerField:
-    def __init__(self, team_1, team_2, players) -> None:
+    def __init__(self, team_1, team_2, score:list[int]) -> None:
         self.μ = 0.05 # ???
         self.state = "Begin" # throw_in | corner
         self.team_1 = team_1
         self.team_2 = team_2
+        self.team_1_score = score[0]
+        self.team_2_score = score[1]
+        self.score_line = font.render("-", True, WHITE)
+        self.score_team_1 = font.render(f'{self.team_1_score}', True, WHITE)
+        self.score_team_2 = font.render(f'{self.team_2_score}', True, WHITE)
         self.center_circle = [screen_width/2,screen_height/2]
         self.middle_line = ([screen_width/2, screen_height-field_height], [screen_width/2, field_height])
         self.bottom_sideline = ([screen_width-field_width,field_height], [field_width,field_height])
@@ -102,10 +115,7 @@ class SoccerField:
         self.ls_penalty_box_arc = [screen_width-field_width+penalty_area_width, screen_height/2]
         self.ls_penalty_kick_mark = [screen_width-field_width+goal_area_width+((penalty_area_width-goal_area_width)/2), screen_height/2]
 
-
-        self.ball_initial_pos = [screen_width/2,screen_height-field_height+area_padding2]
-        self.ball = Ball(self.ball_initial_pos)
-
+        
         self.rs_penalty_area_upper = ([field_width, screen_height-field_height+area_padding], [field_width-penalty_area_width,screen_height-field_height+area_padding])
         self.rs_penalty_area_bottom = ([field_width, field_height-area_padding], [field_width-penalty_area_width,field_height-area_padding])
         self.rs_penalty_area_singleline = ([field_width-penalty_area_width, screen_height-field_height+area_padding], [field_width-penalty_area_width,field_height-area_padding])
@@ -118,6 +128,9 @@ class SoccerField:
         self.rs_penalty_box_arc = [field_width-penalty_area_width, screen_height/2]
         self.rs_penalty_kick_mark = [field_width-goal_area_width-((penalty_area_width-goal_area_width)/2), screen_height/2]
 
+        self.ball_initial_pos = [screen_width/2, screen_height/2 - grosor]
+        self.ball = Ball(self.ball_initial_pos, self.μ)
+        
     def draw(self) -> None:
 
         # center circle
@@ -199,18 +212,25 @@ class SoccerField:
         # penalty box arc
         pygame.draw.circle(screen, (221,221,221), self.rs_penalty_box_arc, penalty_area_width/2, grosor, False, True, True, False)
         
+        screen.blit(self.score_line, (int(self.middle_line[0][0] - (grosor/2)), int(self.top_left_corner[1]/2)))
+        screen.blit(self.score_team_1, (int(self.middle_line[0][0]- (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
+        screen.blit(self.score_team_2, (int(self.middle_line[0][0]+ (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
         self.ball.draw()
+        self.team_1.draw()
 
     def goal(self) -> int:
-        
-        if (self.ball.x < self.ls_arco_area_singlelane[0][0]) and (self.ball.y > self.ls_arco_area_singlelane[0][1] and self.ball.y < self.ls_arco_area_singlelane[1][1]):
+        if (self.ball.x < self.ls_arco_area_bottom[0][0]) and (self.ball.y > self.ls_arco_area_singlelane[0][1] and self.ball.y < self.ls_arco_area_singlelane[1][1]):
             print(" GOL DEL LADO IZQUIERDO ")
+            self.team_2_score += 1
+            self.score_team_2 = font.render(f'{str(self.team_2_score)}', True, WHITE)
             self.ball.reset_speed()
             self.ball.reposition(self.ball_initial_pos)
             # reposicionar jugadores
             
-        elif self.ball.x > self.rs_arco_area_singlelane[0][0] and (self.ball.y > self.rs_arco_area_singlelane[0][1] and self.ball.y < self.rs_arco_area_singlelane[1][1]):
+        elif self.ball.x > self.rs_arco_area_bottom[0][0] and (self.ball.y > self.rs_arco_area_singlelane[0][1] and self.ball.y < self.rs_arco_area_singlelane[1][1]):
             print(" GOL DEL LADO DERECHO ")
+            self.team_1_score += 1
+            self.score_team_1 = font.render(f'{str(self.team_1_score)}', True, WHITE)
             self.ball.reset_speed()
             self.ball.reposition(self.ball_initial_pos)
             # reposicionar jugadoress
@@ -220,7 +240,6 @@ class SoccerField:
         if self.ball.y < self.upper_sideline[0][1]: 
             self.ball.reset_speed()
             self.ball.reposition([self.ball.x, self.upper_sideline[0][1]])
-            
             # mandar jugador atras de la pelota y hacer player.throw_in()
 
         elif self.ball.y > self.bottom_sideline[0][1]:
@@ -231,44 +250,149 @@ class SoccerField:
         return
     
     def corner(self) -> None:
-        if field.ball.x < self.ls_arco_area_singlelane[0][0]:
-            if self.ball.y < self.ls_arco_area_singlelane[0][1]:
+
+        if field.ball.x < field.top_left_corner[0]:
+            if self.ball.y <= self.ls_arco_area_singlelane[0][1]:
                 # corner arriba izquierda
                 self.ball.reset_speed()
-                self.ball.reposition(self.top_left_corner)
+                if (self.ball.last_touch == self.team_2):
+                    self.ball.reposition(self.ls_penalty_kick_mark)
+                else:
+                    self.ball.reposition(self.top_left_corner)
                 # mandar jugador atras de la pelota y hacer player.corner() creo q es similar a player.thrown_in()
 
-            elif self.ball.y < self.ls_arco_area_singlelane[1][1]:
+            elif self.ball.y >= self.ls_arco_area_singlelane[1][1]:
                 # corner abajo izquierda
                 self.ball.reset_speed()
-                self.ball.reposition(self.bottom_left_corner())
+                if (self.ball.last_touch == self.team_2):
+                    self.ball.reposition(self.ls_penalty_kick_mark)
+                else:
+                    self.ball.reposition(self.bottom_left_corner)
                 # mandar jugador atras de la pelota y hacer player.corner() creo q es similar a player.thrown_in()
 
-        elif self.ball.x > self.rs_arco_area_singlelane[0][0]:
-            if self.ball.y < self.rs_arco_area_singlelane[0][1]:
+        elif self.ball.x > field.top_right_corner[0]:
+            if self.ball.y <= self.rs_arco_area_singlelane[0][1]:
                 # corner arriba derecha
                 self.ball.reset_speed()
-                self.ball.reposition(self.top_right_corner)
+                if (self.ball.last_touch == self.team_1):
+                    self.ball.reposition(self.rs_penalty_kick_mark)
+                else:
+                    self.ball.reposition(self.top_right_corner)
                 # mandar jugador atras de la pelota y hacer player.corner() creo q es similar a player.thrown_in()
 
-            elif self.ball.y < self.rs_arco_area_singlelane[1][1]:
+            elif self.ball.y >= self.rs_arco_area_singlelane[1][1]:
                 # corner abajo derecha
                 self.ball.reset_speed()
-                self.ball.reposition(self.bottom_right_corner)
+                if (self.ball.last_touch == self.team_1):
+                    self.ball.reposition(self.rs_penalty_kick_mark)
+                else:
+                    self.ball.reposition(self.bottom_right_corner)
                 # mandar jugador atras de la pelota y hacer player.corner() creo q es similar a player.thrown_in()
                 
         return
 
-    def begin(self) -> None:
-        self.ball.move(self.μ)
-
     def palo(self) -> None:
         # funciona :D
-        if (self.ball.x < self.ls_arco_area_upper[0][0] and self.ball.y == self.ls_arco_area_upper[0][1]) or (self.ball.x > self.rs_arco_area_upper[0][0] and self.ball.y == self.rs_arco_area_upper[0][1]):
-            print("uwu")
+        if (self.ball.y <= self.ls_arco_area_upper[0][1]+10 and self.ball.y >= self.ls_arco_area_upper[0][1]-10):
+            if ((self.ball.x < self.ls_arco_area_upper[0][0]+10 and self.ball.x > self.ls_arco_area_upper[0][0]-35)) or ((self.ball.x > self.rs_arco_area_upper[0][0]-10 and self.ball.x < self.rs_arco_area_upper[0][0]+35)):
+                self.ball.hit([self.ball.speed[0]*-1, random.choice([-1, 1])*self.ball.speed[1]*random.uniform(0.5, 1.0)], self.ball.last_touch)
+        elif (self.ball.y <= self.ls_arco_area_bottom[0][1]+10 and self.ball.y >= self.ls_arco_area_bottom[0][1]-10):
+            if ((self.ball.x < self.ls_arco_area_upper[0][0]+10 and self.ball.x > self.ls_arco_area_upper[0][0]-35)) or ((self.ball.x > self.rs_arco_area_upper[0][0]-10 and self.ball.x < self.rs_arco_area_upper[0][0]+35)):
+                self.ball.hit([self.ball.speed[0]*-1, random.choice([-1, 1])*self.ball.speed[1]*random.uniform(0.5, 1.0)], self.ball.last_touch)
+    
+    def begin(self) -> None:
+        self.ball.move()
 
-field = SoccerField(1,1,15)
-field.ball.hit([39,0], 1)
+
+class Team:
+    def __init__(self, name, goalkeeper, behavior):
+        self.name = name
+        goalkeeper.set_behavior(behavior)
+        behavior.set_player(goalkeeper)
+        self.player_list = [goalkeeper]
+    
+    def add_player(self, player, behavior):
+        player.set_behavior(behavior)
+        behavior.set_player(player)
+        self.player_list.append(player)
+
+    def get_name(self) -> str:
+        return self.name
+
+    def draw(self) -> None:
+        for player in self.player_list:
+            player.draw()
+
+    def get_players(self) -> list:
+        return self.player_list
+        
+
+class Player(threading.Thread):
+    def __init__(self, speed, strenght):
+        super().__init__()
+        self.x = 0
+        self.y = 0
+        self.speed = speed
+        self.strength = strenght
+        self.running = True
+        self.image = player_1_img
+        self.scaled_player = pygame.transform.scale(self.image, (50, 50)) # to-do: rescalar dinamicamente
+        self.img_rect = self.scaled_player.get_rect(center=(screen_width/2, screen_height/2))
+
+    def set_behavior(self, behavior):
+        self.behavior = behavior
+        self.x = behavior.x
+        self.y = behavior.y
+        self.img_rect = self.scaled_player.get_rect(center=(self.x, self.y))
+    
+    def set_team(self, team):
+        self.team = team
+
+    def draw(self) -> None:
+        screen.blit(self.scaled_player, self.img_rect)
+
+    def run(self) -> None:
+        while self.running:
+            #do something
+            print()
+
+class Behavior:
+    def __init__(self, pos:list[float]) -> None:
+        self.x = pos[0]
+        self.y = pos[1]
+
+    def set_player(self, player):
+        self.player = player
+
+
+goalkeeper = Player(1,1)
+behavior = Behavior([0,0])
+team_1 = Team("", goalkeeper, behavior)
+
+player1 = Player(1,1)
+behavior1 = Behavior([100,100])
+team_1.add_player(player1, behavior1)
+
+player2 = Player(1,1)
+behavior2 = Behavior([200,200])
+team_1.add_player(player2, behavior2)
+
+player3 = Player(1,1)
+behavior3 = Behavior([300,300])
+team_1.add_player(player3, behavior3)
+
+player4 = Player(1,1)
+behavior4 = Behavior([400,400])
+team_1.add_player(player4, behavior4)
+
+field = SoccerField(team_1, 0, [0,0])
+
+print([ field.rs_arco_area_upper[0][0] - field.rs_penalty_kick_mark[0], field.rs_arco_area_upper[0][1] - field.rs_penalty_kick_mark[1]])
+field.ball.hit([40, 0], 2)
+
+# Game start time (in milliseconds)
+start_time = pygame.time.get_ticks()
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -279,7 +403,26 @@ while True:
     field.throw_in()
     field.goal()
     field.palo()
+    field.corner()
     field.begin()
     
+    # Calculate the elapsed time in seconds
+    elapsed_time = (pygame.time.get_ticks() - start_time) // 1000
+
+    # Calculate minutes and seconds
+    minutes = elapsed_time // 60
+    seconds = elapsed_time % 60
+
+    # Format the time as "00:00"
+    current_time = f"{minutes:02d}:{seconds:02d}"
+
+    # Render the time on the screen
+    time_surface = font.render(current_time, True, (255, 255, 255))
+
+
+    # Draw the time on the screen
+    screen.blit(time_surface, (int(field.middle_line[0][0] - (5*font_size/6)), int(field.top_left_corner[1]/2) - (font_size)))
+
+
     clock.tick(60)  # limits FPS to 60
     pygame.display.flip()
