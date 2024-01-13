@@ -30,17 +30,12 @@ area_padding = (15*field_height)/85
 area_padding1 = area_padding + (15.125*penalty_area_height)/85
 area_padding2 = area_padding1 + (7.5625 * goal_area_height)/85
 
-
-the_capricious = (screen_width * screen_height) / 110000
-
-
-
 pygame.init()
-font_size = 36
+font_size = 36 # rescalar dinamicamente
 font = pygame.font.Font(None, font_size)
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height))
-ball_img = pygame.image.load("src/img/ball.png")
+ball_img = pygame.image.load("src/img/ball2.png")
 player_1_img = pygame.image.load("src/img/player_1.jpg")
 
 class Ball: # Que sea un thread y en el while true haga el move() mientras la velocidad no sea 0 y cuando lo sea que se duerma y la despiertan con un hit
@@ -51,7 +46,7 @@ class Ball: # Que sea un thread y en el while true haga el move() mientras la ve
         self.coef = coef
         self.last_touch = None
         self.image = ball_img
-        self.scaled_ball = pygame.transform.scale(ball_img, (35, 35)) # to-do: rescalar dinamicamente
+        self.scaled_ball = pygame.transform.scale(ball_img, (40, 35)) # to-do: rescalar dinamicamente
         self.img_rect = self.scaled_ball.get_rect(center=(self.x, self.y))
 
     def reposition(self, pos: list[float]) -> None:
@@ -216,7 +211,7 @@ class SoccerField:
         screen.blit(self.score_team_1, (int(self.middle_line[0][0]- (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
         screen.blit(self.score_team_2, (int(self.middle_line[0][0]+ (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
         self.ball.draw()
-        self.team_1.draw()
+        #self.team_1.draw()
 
     def goal(self) -> int:
         if (self.ball.x < self.ls_arco_area_bottom[0][0]) and (self.ball.y > self.ls_arco_area_singlelane[0][1] and self.ball.y < self.ls_arco_area_singlelane[1][1]):
@@ -363,8 +358,7 @@ class Behavior:
 
     def set_player(self, player):
         self.player = player
-
-
+'''
 goalkeeper = Player(1,1)
 behavior = Behavior([0,0])
 team_1 = Team("", goalkeeper, behavior)
@@ -384,8 +378,8 @@ team_1.add_player(player3, behavior3)
 player4 = Player(1,1)
 behavior4 = Behavior([400,400])
 team_1.add_player(player4, behavior4)
-
-field = SoccerField(team_1, 0, [0,0])
+'''
+field = SoccerField(0, 0, [0,0])
 
 print([ field.rs_arco_area_upper[0][0] - field.rs_penalty_kick_mark[0], field.rs_arco_area_upper[0][1] - field.rs_penalty_kick_mark[1]])
 field.ball.hit([40, 0], 2)
