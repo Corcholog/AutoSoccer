@@ -1,6 +1,5 @@
-import pygame, sys, threading, time, random
+import pygame, sys, threading, random
 from screeninfo import get_monitors
-from datetime import datetime
 
 monitor = get_monitors()
 
