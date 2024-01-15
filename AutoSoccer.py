@@ -335,8 +335,8 @@ class PlayerCamera:
     def set_fov(self, new_fov):
         self.fov = new_fov
     
-    def draw(self):
-        print()
+    #def draw(self):
+
 
     def move_camera(self, angle):
         self.angle = angle
