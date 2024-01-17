@@ -44,7 +44,7 @@ class Ball(pygame.sprite.Sprite): # Que sea un thread y en el while true haga el
         self.x = pos[0]
         self.y = pos[1]
         self.coef = coef
-        self.angle = float(0)
+        self.set_angle(0)
         self.vector = (self.angle, self.speed)
         self.last_touch = None
         self.image = ball_img
@@ -76,16 +76,16 @@ class Ball(pygame.sprite.Sprite): # Que sea un thread y en el while true haga el
         return self.speed
 
     def get_angle(self) -> float:
-        return self.angle
+        return math.degrees(self.angle)
 
     def set_angle(self, angle : float):
         self.angle = math.radians(angle)
 
     def hit(self, angle, strength, last_touch) -> None:
         self.last_touch = last_touch
-        self.angle = math.radians(angle)
+        self.set_angle(angle)
         self.speed = strength
-        self.vector = (math.radians(angle), strength)
+        self.vector = (self.angle, strength)
 
     def apply_smooth_friction(self, vector):
         angle, z = vector
@@ -515,7 +515,7 @@ field = SoccerField(team_1, team_1, [0,0])
 team_1.set_field(field)
 print([ field.rs_arco_area_upper[0][0] - field.rs_penalty_kick_mark[0], field.rs_arco_area_upper[0][1] - field.rs_penalty_kick_mark[1]])
 
-field.get_ball().hit(180, 10, 1)
+field.get_ball().hit(-45, 20, 1)
 # Game start time (in milliseconds)
 start_time = pygame.time.get_ticks()
 
