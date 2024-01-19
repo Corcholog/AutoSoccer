@@ -244,6 +244,8 @@ class SoccerField:
 
     def draw(self):
         screen.blit(self.background, (0, 0))
+        screen.blit(self.score_team_1, (int(self.middle_line[0][0]- (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
+        screen.blit(self.score_team_2, (int(self.middle_line[0][0]+ (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
 
     def draw_on_screen(self, screen) -> None:
         screen.fill(GREEN)
@@ -337,8 +339,7 @@ class SoccerField:
         pygame.draw.circle(screen, (221,221,221), self.rs_penalty_box_arc, penalty_area_width/2, grosor, False, True, True, False)
         
         screen.blit(self.score_line, (int(self.middle_line[0][0] - (grosor/2)), int(self.top_left_corner[1]/2)))
-        screen.blit(self.score_team_1, (int(self.middle_line[0][0]- (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
-        screen.blit(self.score_team_2, (int(self.middle_line[0][0]+ (font_size*2) - (grosor/2)), int(self.top_left_corner[1]/2)))
+     
 
         
 
@@ -887,7 +888,7 @@ class Team:
     def get_players(self) -> list:
         return self.player_list.copy()
         
-goalkeeper = Player("JUNINHO PERNAMBUCANO", 1, 20, player_1_img)
+goalkeeper = Player("JUNINHO PERNAMBUCANO", 5, 25, player_1_img)
 behaviour = FieldPlayerBehaviour([screen_width/3, screen_height/3])
 team_1 = Team("", goalkeeper, behaviour)
 
@@ -895,23 +896,23 @@ player1 = Player("GIANNI", 1, 10, player_3_img)
 Behaviour1 = FieldPlayerBehaviour([screen_width/3 + 100, screen_height/3 - 200])
 team_2 = Team("", player1, Behaviour1)
 
-player2 = Player("GIANNI2", 4, 20, player_3_img)
+player2 = Player("GIANNI2", 3, 25, player_3_img)
 Behaviour2 = FieldPlayerBehaviour([screen_width/3, (screen_height/3) + 100])
 
-player3 = Player("GIANNI3", 2, 10, player_3_img)
+player3 = Player("GIANNI3", 3, 25, player_3_img)
 Behaviour3 = FieldPlayerBehaviour([screen_width/3 - 100, (screen_height/3) + 200])
 
-player4 = Player("GIANNI4", 2, 10, player_3_img)
+player4 = Player("GIANNI4", 3, 25, player_3_img)
 Behaviour4 = FieldPlayerBehaviour([screen_width/3, (screen_height/3) + 300])
 
 
-player5 = Player("GIANNI5", 2, 10, player_3_img)
+player5 = Player("GIANNI5", 3, 25, player_3_img)
 Behaviour5 = FieldPlayerBehaviour([screen_width/3, (screen_height/3) + 400])
 
-player6 = Player("GIANNI5", 2, 10, player_3_img)
+player6 = Player("GIANNI5", 3, 25, player_3_img)
 Behaviour6 = FieldPlayerBehaviour([screen_width/3, (screen_height/3) + 500])
 
-player7 = Player("GIANNI5", 2, 10, player_3_img)
+player7 = Player("GIANNI5", 3, 25, player_3_img)
 Behaviour7 = FieldPlayerBehaviour([screen_width/3, (screen_height/3) + 600])
 
 team_2.add_player(player2, Behaviour2)
