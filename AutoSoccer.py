@@ -111,12 +111,10 @@ class Ball(pygame.sprite.Sprite):
         return self.pos
 
     def get_speed(self) -> list[float]:
-        with self.lock:
-            return self.vector[1]
+        return self.vector[1]
 
     def get_angle(self) -> float:
-        with self.lock:
-            return math.degrees(self.vector[0])
+        return math.degrees(self.vector[0])
 
     def get_angle_to_pos(self, target_pos:list[float]) -> float:
         dx = target_pos[0] - self.pos[0]
