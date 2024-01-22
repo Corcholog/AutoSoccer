@@ -4,8 +4,8 @@ monitor = get_monitors()
 
 screen_width = 1600
 screen_height = 900
-#screen_width = monitor[0].width
-#screen_height = monitor[0].height
+screen_width = monitor[0].width
+screen_height = monitor[0].height
 
 half_height = screen_height / 2
 half_width = screen_width / 2
@@ -48,16 +48,13 @@ font = pygame.font.Font(None, font_size)
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
 
+agus_img = pygame.image.load("src/img/agus.png")
+gianni_img = pygame.image.load("src/img/gianni.png")
+paqui_img = pygame.image.load("src/img/paqui.png")
+giorgio_img = pygame.image.load("src/img/giorgio.png")
+
 ball_img = pygame.image.load("src/img/ball_3.png")
-player_hot = pygame.image.load("src/img/player_hot.png")
-player_8_img = pygame.image.load("src/img/player_8.png")
-player_7_img = pygame.image.load("src/img/player_7.png")
-player_6_img = pygame.image.load("src/img/player_6.png")
-player_5_img = pygame.image.load("src/img/player_5.png")
-player_4_img = pygame.image.load("src/img/player_4.png")
-player_3_img = pygame.image.load("src/img/player_3.png")
-player_2_img = pygame.image.load("src/img/player_2.png")
-player_1_img = pygame.image.load("src/img/player_1.png")
+
 
 class Ball(pygame.sprite.Sprite): 
     def __init__(self, pos: list[float], coef, field) -> None:
@@ -781,7 +778,7 @@ class Player(threading.Thread, pygame.sprite.Sprite):
     def run(self) -> None:
         while True:
             self.behaviour.metodo_magico()
-            time.sleep(1/60)
+            time.sleep(1/30)
 
     def move_arquero(self, angle, speed):
         self.set_vector(vector=(angle, speed))
@@ -1498,49 +1495,48 @@ class Team:
 
 # arqueros   
     
-goalkeeper = Player("JUNINHO PERNAMBUCANO", 4, 45, player_5_img)
+goalkeeper = Player("JUNINHO PERNAMBUCANO", 6, 45, giorgio_img)
 behaviour = GoalkeeperBehaviour([screen_width-field_width, half_height])
 team_1 = Team("", goalkeeper, behaviour)
 
-player2 = Player("PAQUI", 4, 45, player_4_img)
+player2 = Player("PAQUI", 6, 45, paqui_img)
 behaviour2 = GoalkeeperBehaviour([screen_width-field_width, half_height])
 team_2 = Team("", player2, behaviour2)
 
 # jugadores team 2
 
 
-player1 = Player("GIANNI2", 4, 25, player_8_img)
+player1 = Player("GIANNI2", 6, 25, gianni_img)
 behaviour1 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
 team_2.add_player(player1, behaviour1)
 
-player4 = Player("GIANNI3", 4, 25, player_8_img)
+player4 = Player("GIANNI3", 6, 25, gianni_img)
 behaviour4 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
 team_2.add_player(player4, behaviour4)
 
-player5 = Player("GIANNI4", 4, 25, player_8_img)
+player5 = Player("GIANNI4", 6, 25, gianni_img)
 behaviour5 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
 team_2.add_player(player5, behaviour5)
 
-player6 = Player("GIANNI5", 4, 25, player_8_img)
+player6 = Player("GIANNI5", 6, 25, gianni_img)
 behaviour6 = FieldPlayerBehaviour([half_width - 400, half_height - 100], 200)
 team_2.add_player(player6, behaviour6)
 
 
 # jugadores team 1
-
-player3 = Player("FERRO2", 4, 25, player_hot)
+player3 = Player("FERRO2", 6, 25, agus_img)
 behaviour3 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
 team_1.add_player(player3, behaviour3)
 
-player7 = Player("FERRO3", 4, 25, player_hot)
+player7 = Player("FERRO3", 6, 25, agus_img)
 behaviour7 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
 team_1.add_player(player7, behaviour7)
 
-player8 = Player("FERRO4", 4, 25, player_hot)
+player8 = Player("FERRO4", 6, 25, agus_img)
 behaviour8 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
 team_1.add_player(player8, behaviour8)
 
-player9 = Player("FERRO5", 4, 25, player_hot)
+player9 = Player("FERRO5", 6, 25, agus_img)
 behaviour9 = FieldPlayerBehaviour([half_width - 400, half_height - 100], 200)
 team_1.add_player(player9, behaviour9)
 
