@@ -25,6 +25,7 @@ field_height = (screen_height * 85) / 100
 
 lockazo = threading.Lock()
 
+
 # numeric values that were constants 10 and 8 for a base resolution 1920x1080 rescalated for dynamic res.
 grosor = int(screen_width * screen_height/ 207360)
 grosor2 = int(screen_width * screen_height/ 259200)
@@ -48,6 +49,7 @@ font = pygame.font.Font(None, font_size)
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
 
+agus_img = pygame.image.load("src/img/agus.png")
 ball_img = pygame.image.load("src/img/ball_3.png")
 player_hot = pygame.image.load("src/img/player_hot.png")
 player_8_img = pygame.image.load("src/img/player_8.png")
@@ -56,8 +58,27 @@ player_6_img = pygame.image.load("src/img/player_6.png")
 player_5_img = pygame.image.load("src/img/player_5.png")
 player_4_img = pygame.image.load("src/img/player_4.png")
 player_3_img = pygame.image.load("src/img/player_3.png")
-player_2_img = pygame.image.load("src/img/player_2.png")
+gianni_img = pygame.image.load("src/img/player_2.png")
 player_1_img = pygame.image.load("src/img/player_1.png")
+
+##### GAME POSITIONS ########
+
+GK = [screen_width - field_width, half_height]
+
+ST = [half_width - 2.5*player_size[0], half_height]
+
+RW = [ST[0] - player_size[0], ST[1] + 3*player_size[0]]
+LW = [ST[0] - player_size[0], ST[1] - 3*player_size[0]]
+
+LB = [LW[0] - 5*player_size[0], LW[1] - 2*player_size[0]]
+RB = [RW[0] - 5*player_size[0], RW[1] + 2*player_size[0]]
+CB_L = [LB[0], LB[1] + 3*player_size[0]]
+CB_R = [RB[0], RB[1] - 3*player_size[0]]
+
+CM_L = [CB_L[0] + 5*player_size[0], CB_L[1] - 2*player_size[0]]
+CM_M = [CB_L[0] + 4*player_size[0], ST[1]] 
+CM_R = [CB_R[0] + 5*player_size[0], CB_R[1] + 2*player_size[0]]
+
 
 class Ball(pygame.sprite.Sprite): 
     def __init__(self, pos: list[float], coef, field) -> None:
@@ -186,11 +207,12 @@ class Ball(pygame.sprite.Sprite):
         self.vector = self.apply_smooth_friction(self.vector)
         self.pos = self.img_rect.center
         if(self.pos == self.last_pos) and (self.field.get_state() == "Playing") and (not self.alone()):
-            if(self.cont < 20):
+            if(self.cont < 60):
                 self.cont += 1
             else:
                 self.cont = 0
-                self.hit(random.uniform(0.1, 359.9), 8, None)
+                print("se traba")
+                self.hit(random.uniform(0.1, 359.9), 15, None)
         else:
             self.last_pos = self.pos
 
@@ -536,7 +558,7 @@ class Fov:
         RestaSumaRad = math.radians(50)
 
         #distancia cono
-        self.L = (screen_width * screen_height * 90) / 2073600
+        self.L = (screen_width * screen_height * 45) / 2073600
         extremo_x = A + self.L * math.cos(zrad)
         extremo_y = B + self.L * math.sin(zrad)
 
@@ -593,52 +615,36 @@ class Fov:
         #screen.blit(original_surface, bottom_right_rect.topleft)
 
         if 50 >= self.angle >= 40:
-            #print("cuadrante 1")
             return bottom_right_rect.colliderect(sprite.get_rect())
         
         elif 140 >= self.angle >= 130:
-            #print("cuadrante 2")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
             return bottom_left_rect.colliderect(sprite.get_rect())
         
         elif 230 >= self.angle >= 220:
-            #print("cuadrante 3")
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
             return upper_left_rect.colliderect(sprite.get_rect())
          
         elif 320 >= self.angle >= 310:
-            #print("cuadrante 4")
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
             return upper_right_rect.colliderect(sprite.get_rect())
 
         elif 45 < self.angle < 135:
-            #print("cuadrante 1 y 2")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
-            #print("¿Hay colisión con el rectángulo 1?", bottom_right_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 2?", bottom_left_rect.colliderect(sprite.get_rect()))
             return bottom_right_rect.colliderect(sprite.get_rect()) or bottom_left_rect.colliderect(sprite.get_rect())
             
         elif 225 > self.angle > 135:
-            #print("cuadrante 2 y 3")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 2?", bottom_left_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 3?", upper_left_rect.colliderect(sprite.get_rect()))
             return bottom_left_rect.colliderect(sprite.get_rect()) or upper_left_rect.colliderect(sprite.get_rect())
 
         elif 315 > self.angle > 225:
-            #print("cuadrante 3 y 4")
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 3?", upper_left_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 4?", upper_right_rect.colliderect(sprite.get_rect()))
             return upper_left_rect.colliderect(sprite.get_rect()) or upper_right_rect.colliderect(sprite.get_rect())
             
         elif 45 > self.angle or self.angle > 315:
-            #print("cuadrante 4 y 1")
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 1?", bottom_right_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 4?", upper_right_rect.colliderect(sprite.get_rect()))
             return bottom_right_rect.colliderect(sprite.get_rect()) or upper_right_rect.colliderect(sprite.get_rect())
         else:
             return False
@@ -781,7 +787,7 @@ class Player(threading.Thread, pygame.sprite.Sprite):
     def run(self) -> None:
         while True:
             self.behaviour.metodo_magico()
-            time.sleep(1/60)
+            time.sleep(1/30)
 
     def move_arquero(self, angle, speed):
         self.set_vector(vector=(angle, speed))
@@ -915,6 +921,7 @@ class Behaviour():
             the_nearest = nearest_teammate
         elif (nearest_enemy_distance < 0.8*player_size[0]):
             the_nearest = nearest_enemy
+            
         return [the_nearest, nearest_teammate]
     
     def free_path(self, pos:list[float]) -> bool:
@@ -943,7 +950,6 @@ class Behaviour():
                 player_angle = self.player.get_fov().get_angle_to_pos(enemy.get_pos())
                 if(abs(my_angle - player_angle) < 6):
                     return False
-
         return True
     
     def free_teammate(self, forward_pass:bool) -> Player:
@@ -952,54 +958,26 @@ class Behaviour():
             if(self.player.get_fov().is_sprite_at_view(teammate)):
                 teammates_at_view.append(teammate)
         side = self.player.get_side()
-        if  side == 0:
-            enemy_team = 1
-        else:
-            enemy_team = 0
-
-        enemies_at_view = list()
-        for enemy in self.player.get_team().get_field().get_players_team(enemy_team):
-            if(self.player.get_fov().is_sprite_at_view(enemy)):
-                enemies_at_view.append(enemy)
 
         if(forward_pass):
             for free in teammates_at_view:
                 if free is not self.player:
-                    flag = True
-                    distance = math.sqrt(((self.get_pos()[0] - free.get_pos()[0])**2 + (self.get_pos()[1] - free.get_pos()[1])**2))
-                    for enemy in enemies_at_view:
-                        if(abs(self.player.get_fov().get_angle_to_pos(free.get_pos()) - self.player.get_fov().get_angle_to_pos(enemy.get_pos())) < 6):
-                            enemy_distance = math.sqrt(((self.get_pos()[0] - enemy.get_pos()[0])**2 + (self.get_pos()[1] - enemy.get_pos()[1])**2))
-                            if(distance >= enemy_distance):
-                                flag = False
-                                break
                     if(side == 0):
                         if(self.player.get_pos()[0] < free.get_pos()[0]):
                             return free
                     else:
                         if(self.player.get_pos()[0] > free.get_pos()[0]):
                             return free
-            return None
         else:
-            nearest =  None
-            nearest_distance = 1920
-
             for free in teammates_at_view:
                 if free is not self.player:
-                    flag = True
-                    distance = math.sqrt(((self.get_pos()[0] - free.get_pos()[0])**2 + (self.get_pos()[1] - free.get_pos()[1])**2))
-                    for enemy in enemies_at_view:
-                        if(abs(self.player.get_fov().get_angle_to_pos(free.get_pos()) - self.player.get_fov().get_angle_to_pos(enemy.get_pos())) < 6):
-                            enemy_distance = math.sqrt(((self.get_pos()[0] - enemy.get_pos()[0])**2 + (self.get_pos()[1] - enemy.get_pos()[1])**2))
-                            if(distance >= enemy_distance):
-                                flag = False
-                                break
-                    
-                    if((nearest == None or distance < nearest_distance) and flag):
-                        nearest = free
-                        nearest_distance = distance
-
-            return nearest
+                    if(side == 0):
+                        if(self.player.get_pos()[0] > free.get_pos()[0]):
+                            return free
+                    else:
+                        if(self.player.get_pos()[0] < free.get_pos()[0]):
+                            return free
+        return None
     
     def aim_and_kick(self):
         side = self.player.get_side()
@@ -1018,7 +996,6 @@ class Behaviour():
 
         self.player.set_speed(0.0)
         self.player.stop_ball()
-        #print(self.player.get_strength())
         if (side == 0):
             if (distance_to_upper < distance_to_bottom):
                 self.player.kick_with_angle(upper_angle + 4, self.player.get_strength())
@@ -1134,11 +1111,9 @@ class GoalkeeperBehaviour(Behaviour):
                     if(self.cont > 30):
                         if(self.player.get_side() == 1):
                             self.player.kick_with_angle(random.choice([135, 225]), self.player.get_strength())
-                            time.sleep(0.2)
                             self.cont = 0
                         else:
                             self.player.kick_with_angle(random.choice([45, 315]), self.player.get_strength())
-                            time.sleep(0.2)
                             self.cont = 0
             else:
                 self.action_blind()
@@ -1215,11 +1190,11 @@ class FieldPlayerBehaviour(Behaviour):
             else:
                 enemy_side = 0
             
+            # maybe se podria ignorar teammates
             teammates = self.player.get_team().get_field().get_players_team(side)
             enemies = self.player.get_team().get_field().get_players_team(enemy_side)
             for i in range(1, len(teammates)):
                 enemy = enemies[i]
-                
                 my_angle = self.player.get_fov().get_angle_to_object(enemy)
                 if(side == 0):
                     if(greatest_angle >= 270) and (my_angle >= greatest_angle):
@@ -1233,25 +1208,27 @@ class FieldPlayerBehaviour(Behaviour):
         return False
 
     def try_move_forward(self) -> bool:
+        player_pos = self.player.get_pos()
         if(self.player.get_side() == 0):
-            target_pos_rs = self.player.get_team().get_field().rs_penalty_kick_mark
-            if(self.free_path(target_pos_rs)):
-                self.move_with_ball(self.player.get_fov().get_angle_to_pos(target_pos_rs))
+            next_move = [player_pos[0] + 2*player_size[0], player_pos[1]]
+            if(self.free_path(next_move)):
+                self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                 return True
             else:
-                if(self.free_path([target_pos_rs[0], self.player.get_pos()[1]])):
-                    self.move_with_ball(self.player.get_fov().get_angle_to_pos([target_pos_rs[0], self.player.get_pos()[1]]))
+                next_move = [player_pos[0] - 2*player_size[0], player_pos[1]]
+                if(self.free_path(next_move)):
+                    self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                     return True
         else:
-            target_pos_ls = self.player.get_team().get_field().ls_penalty_kick_mark
-            if(self.free_path(target_pos_ls)):
-                self.move_with_ball(self.player.get_fov().get_angle_to_pos(target_pos_ls))
+            next_move = [player_pos[0] - 2*player_size[0], player_pos[1]]
+            if(self.free_path(next_move)):
+                self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                 return True
             else:
-                if(self.free_path([target_pos_ls[0], self.player.get_pos()[1]])):
-                    self.move_with_ball(self.player.get_fov().get_angle_to_pos([target_pos_ls[0], self.player.get_pos()[1]]))
+                next_move = [player_pos[0] + 2*player_size[0], player_pos[1]]
+                if(self.free_path([next_move[0], player_pos[1]])):
+                    self.move_with_ball(self.player.get_fov().get_angle_to_pos([next_move[0], player_pos[1]]))
                     return True
-
         return False
 
     def metodo_magico(self):
@@ -1267,33 +1244,45 @@ class FieldPlayerBehaviour(Behaviour):
                         if(not self.try_move_forward()):
                             target_pass = self.free_teammate(False)
                             if target_pass == None:
-                                self.hold_ball()
+                                print("la revienta")
+                                self.player.kick_with_angle(self.player.get_fov().get_angle_to_pos([self.arco_line[0][0], half_height]), self.player.get_strength())
                             else:
                                 self.aim_and_pass(target_pass)
                     else:
                         self.aim_and_pass(target_pass) 
         
             elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() == self.player.get_side()):
+                #time.sleep(1/30)
                 self.unmark()
+                time.sleep(1/2)
+                
             elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() != self.player.get_side()):
                 if(nearest_to_ball[1] == self.player):
                     angle = self.player.get_fov().get_angle_to_object(ball)
                     self.player.move(angle, self.player.get_speed())
                 else:
+                    
                     self.mark()
+                    time.sleep(1/2)
             elif (nearest_to_ball[0] == None):
+                
+                #print(self.player.get_name())
                 if(nearest_to_ball[1] == self.player and ball.get_speed() != 0):
+                    #if(self.player.get_name() == "FERRO6"):
+                    #    print("INTERCEPTA")
                     self.intercept(self.player.get_speed())
+                    
                 elif (nearest_to_ball[1] == self.player and ball.get_speed() == 0):
-                    #print("me muevo a la pelota")
                     angle = self.player.get_fov().get_angle_to_object(ball)
                     self.player.move(angle, self.player.get_speed())
+                    #time.sleep(1/30)
                 else:
+                    #if(self.player.get_name() == "FERRO6"):
+                    #    print("esta ciego")
                     self.action_blind()
         elif(self.player.get_team().get_field().get_state() == "Out of Game"):
             self.out_of_game()
         else:
-            #print(self.player.get_name())
             self.score()
              
     def action_blind(self):
@@ -1306,29 +1295,23 @@ class FieldPlayerBehaviour(Behaviour):
             self.player.move(self.player.get_fov().get_angle_to_pos(self.pos), self.player.get_speed())
 
     def move_with_ball(self, angle):
-        with self.lock:
-            self.player.kick_with_angle(angle, 2*self.player.get_speed())
-            self.player.move(angle, 0.5*self.player.get_speed())
+        self.player.kick_with_angle(angle, 2*self.player.get_speed())
+        self.player.move(angle, 0.5*self.player.get_speed())
         
     def out_of_game(self):
         last_touch = self.player.get_team().get_field().get_ball().get_last_touch()
         nearest = self.player_has_ball()
         ball = self.player.get_team().get_field().get_ball()
         if(nearest[1] == self.player) and (self.player.get_side() != last_touch):
-            print(last_touch)
-            print(self.player.get_name(), self.player.get_side())
             angle = self.player.get_fov().get_angle_to_object(ball)
             self.player.move(angle, self.player.get_speed())
-            
 
             if(self.player.get_side() == 0):
                 while(self.player.get_pos()[1] < ball.get_pos()[1]):
-                    #print(self.player.get_pos(), " ", ball.get_pos())
                     pass
                 self.player.set_speed(0.0)
             else:
                 while(self.player.get_pos()[1] > ball.get_pos()[1]):
-                    #print(self.player.get_pos(), " ", ball.get_pos())
                     pass
                 self.player.set_speed(0.0)
             
@@ -1338,13 +1321,11 @@ class FieldPlayerBehaviour(Behaviour):
             if(pass_forward == None):
                 if(pass_backwards == None):
                     self.player.kick_with_angle(self.player.get_fov().get_angle_to_pos([self.arco_line[0][0], half_height]), self.player.get_strength())
-                    #time.sleep(5)
                 else:
                     self.aim_and_pass(pass_backwards)
             else:
                 self.aim_and_pass(pass_forward)    
 
-            
             self.player.get_team().get_field().set_state("Playing")
         else:
             self.player.move(self.player.get_fov().get_angle_to_object(ball), 0.0)
@@ -1362,11 +1343,9 @@ class FieldPlayerBehaviour(Behaviour):
                 
                 if(team_side == 0):
                     while(self.player.get_pos()[0] < ball.get_pos()[0]):
-                        #print(self.player.get_pos(), " ", ball.get_pos())
                         pass
                 else:
                     while(self.player.get_pos()[0] > ball.get_pos()[0]):
-                        #print(self.player.get_pos(), " ", ball.get_pos())
                         pass
                 
                 teammate_list = self.player.get_team().get_players()
@@ -1378,54 +1357,54 @@ class FieldPlayerBehaviour(Behaviour):
                 
                 self.player.get_team().get_field().set_state("Playing")
 
-    def ball_taken(self) -> bool: # la tiene el enemigo A SU ALCANCE, NO PUEDO INTERCEPTAR (la veo)
-        return False
-
     def unmark(self):
         side = self.player.get_side()
-        pos = self.player.get_pos()
+        ball_pos = self.player.get_team().get_field().get_ball().get_pos()
         if(side == 0):
-            move_up_right = (pos[0] + 2*player_size[0], pos[1] + 5*player_size[0])
-            move_down_right = (pos[0] + 2*player_size[0], pos[1] - 5*player_size[0])
-            move_backwards = (pos[0] - 2*player_size[0], pos[1])
-            move_forward = (pos[0] + 2*player_size[0], pos[1])
+            move_up_right = (ball_pos[0] + player_size[0], ball_pos[1] + 2*player_size[0])
+            move_down_right = (ball_pos[0] + player_size[0], ball_pos[1] - 2*player_size[0])
+            move_backwards = (ball_pos[0] - player_size[0], ball_pos[1])
+            move_forward = (ball_pos[0] + player_size[0], ball_pos[1])
             
-            if ((move_forward[0] < self.player.get_team().get_field().rs_penalty_kick_mark[0])):
-                if(self.free_path(move_forward)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_forward), self.player.get_speed())
-                elif(self.free_path(move_up_right)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_up_right), self.player.get_speed())
-                elif (self.free_path(move_down_right)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_down_right), self.player.get_speed())
-            else:
-                self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), self.player.get_speed())
-                #time.sleep(0.5)
+            possible_moves = [move_forward, move_up_right, move_down_right, move_backwards]
+
+            random.shuffle(possible_moves)
+
+            for move in possible_moves:
+                self.player.move(self.player.get_fov().get_angle_to_pos(move),self.player.get_speed())
+                break
+                
         else:
-            move_up_right = (pos[0] - 2*player_size[0], pos[1] + 5*player_size[0])
-            move_down_right = (pos[0] - 2*player_size[0], pos[1] - 5*player_size[0])
-            move_backwards = (pos[0] + 2*player_size[0], pos[1])
-            move_forward = (pos[0] - 2*player_size[0], pos[1])
+            move_up_right = (ball_pos[0] - player_size[0], ball_pos[1] + 3*player_size[0])
+            move_down_right = (ball_pos[0] - player_size[0], ball_pos[1] - 3*player_size[0])
+            move_backwards = (ball_pos[0] + player_size[0], ball_pos[1])
+            move_forward = (ball_pos[0] - player_size[0], ball_pos[1])
 
-            if ((move_forward[0] > self.player.get_team().get_field().ls_penalty_kick_mark[0])):
-                if(self.free_path(move_forward)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_forward), self.player.get_speed())
-                elif(self.free_path(move_up_right)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_up_right), self.player.get_speed())
-                elif (self.free_path(move_down_right)):
-                    self.player.move(self.player.get_fov().get_angle_to_pos(move_down_right), self.player.get_speed())
-            else:
-                self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), self.player.get_speed())
-                #time.sleep(0.5)
+            possible_moves = [move_forward, move_up_right, move_down_right, move_backwards]
 
+            random.shuffle(possible_moves)
+
+            for move in possible_moves:
+                self.player.move(self.player.get_fov().get_angle_to_pos(move),self.player.get_speed())
+                break
+                               
     def mark(self):
         side = self.player.get_side()
         pos = self.player.get_pos()
-        if(side == 0):
-            move_backwards = (pos[0] - 2*player_size[0], half_height)         
-            self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), 0.8*self.player.get_speed())
+        ball_pos = self.player.get_team().get_field().get_ball().get_pos()
+        if(abs(pos[0] - ball_pos[0]) > 0.7*half_width):
+            if(side == 0):     
+                self.player.move(self.player.get_fov().get_angle_to_pos(ball_pos), self.player.get_speed())
+            else:
+                self.player.move(self.player.get_fov().get_angle_to_pos(ball_pos), self.player.get_speed())
+        
         else:
-            move_backwards = (pos[0] + 2*player_size[0], half_height)
-            self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), 0.8*self.player.get_speed())
+            if(side == 0):
+                move_backwards = (pos[0] - 5*player_size[0], half_height)         
+                self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), 0.8*self.player.get_speed())
+            else:
+                move_backwards = (pos[0] + 5*player_size[0], half_height)
+                self.player.move(self.player.get_fov().get_angle_to_pos(move_backwards), 0.8*self.player.get_speed())
     
     def search_ball(self) -> bool:
         ball = self.player.get_team().get_field().get_ball()
@@ -1498,52 +1477,99 @@ class Team:
 
 # arqueros   
     
-goalkeeper = Player("JUNINHO PERNAMBUCANO", 4, 45, player_5_img)
-behaviour = GoalkeeperBehaviour([screen_width-field_width, half_height])
+goalkeeper = Player("JUNINHO PERNAMBUCANO", 4, 45, agus_img)
+behaviour = GoalkeeperBehaviour(GK)
 team_1 = Team("", goalkeeper, behaviour)
 
-player2 = Player("PAQUI", 4, 45, player_4_img)
-behaviour2 = GoalkeeperBehaviour([screen_width-field_width, half_height])
-team_2 = Team("", player2, behaviour2)
+t2p1 = Player("PAQUI", 4, 45, gianni_img)
+t2b1 = GoalkeeperBehaviour(GK)
+team_2 = Team("", t2p1, t2b1)
 
 # jugadores team 2
 
+t2p2 = Player("GIANNI2", 4, 25, gianni_img)
+t2b2 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
+team_2.add_player(t2p2, t2b2)
 
-player1 = Player("GIANNI2", 4, 25, player_8_img)
-behaviour1 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
-team_2.add_player(player1, behaviour1)
+t2p3 = Player("GIANNI3", 4, 25, gianni_img)
+t2b3 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
+team_2.add_player(t2p3, t2b3)
 
-player4 = Player("GIANNI3", 4, 25, player_8_img)
-behaviour4 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
-team_2.add_player(player4, behaviour4)
+t2p4 = Player("GIANNI4", 4, 25, gianni_img)
+t2b4 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
+team_2.add_player(t2p4, t2b4)
 
-player5 = Player("GIANNI4", 4, 25, player_8_img)
-behaviour5 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
-team_2.add_player(player5, behaviour5)
+t2p5 = Player("GIANNI5", 4, 25, gianni_img)
+t2b5 = FieldPlayerBehaviour([half_width - 400, half_height - 200], 200)
+team_2.add_player(t2p5, t2b5)
 
-player6 = Player("GIANNI5", 4, 25, player_8_img)
-behaviour6 = FieldPlayerBehaviour([half_width - 400, half_height - 100], 200)
-team_2.add_player(player6, behaviour6)
+t2p6 = Player("GIANNI6", 4, 25, gianni_img)
+t2b6 = FieldPlayerBehaviour([half_width - 100, half_height - 100], 200)
+team_2.add_player(t2p6, t2b6)
 
+t2p7 = Player("GIANNI7", 4, 25, gianni_img)
+t2b7 = FieldPlayerBehaviour([half_width - 100, half_height - 200], 200)
+team_2.add_player(t2p7, t2b7)
+
+t2p8 = Player("GIANNI8", 4, 25, gianni_img)
+t2b8 = FieldPlayerBehaviour([half_width - 100, half_height + 200], 200)
+team_2.add_player(t2p8, t2b8)
+
+t2p9 = Player("GIANNI9", 4, 25, gianni_img)
+t2b9 = FieldPlayerBehaviour([half_width - 100, half_height - 100], 200)
+team_2.add_player(t2p9, t2b9)
+
+t2p10 = Player("GIANNI10", 4, 25, gianni_img)
+t2b10 = FieldPlayerBehaviour([half_width - 400, half_height + 200], 200)
+team_2.add_player(t2p10, t2b10)
+'''
+t2p11 = Player("GIANNI11", 3, 25, gianni_img)
+t2b11 = FieldPlayerBehaviour(ST, 200)
+team_2.add_player(t2p11, t2b11)
+'''
 
 # jugadores team 1
 
-player3 = Player("FERRO2", 4, 25, player_hot)
-behaviour3 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
-team_1.add_player(player3, behaviour3)
+t1p2 = Player("FERRO2", 4, 25, agus_img)
+t1b2 = FieldPlayerBehaviour([half_width - 250, half_height - 100], 200)
+team_1.add_player(t1p2, t1b2)
 
-player7 = Player("FERRO3", 4, 25, player_hot)
-behaviour7 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
-team_1.add_player(player7, behaviour7)
+t1p3 = Player("FERRO3", 4, 25, agus_img)
+t1b3 = FieldPlayerBehaviour([half_width - 200, half_height], 200)
+team_1.add_player(t1p3, t1b3)
 
-player8 = Player("FERRO4", 4, 25, player_hot)
-behaviour8 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
-team_1.add_player(player8, behaviour8)
+t1p4 = Player("FERRO4", 4, 25, agus_img)
+t1b4 = FieldPlayerBehaviour([half_width - 300, half_height + 100], 200)
+team_1.add_player(t1p4, t1b4)
 
-player9 = Player("FERRO5", 4, 25, player_hot)
-behaviour9 = FieldPlayerBehaviour([half_width - 400, half_height - 100], 200)
-team_1.add_player(player9, behaviour9)
+t1p5 = Player("FERRO5", 4, 25, agus_img)
+t1b5 = FieldPlayerBehaviour([half_width - 400, half_height - 200], 200)
+team_1.add_player(t1p5, t1b5)
 
+t1p6 = Player("FERRO6", 4, 25, agus_img)
+t1b6 = FieldPlayerBehaviour([half_width - 100, half_height - 100], 200)
+team_1.add_player(t1p6, t1b6)
+
+t1p7 = Player("FERRO7", 4, 25, agus_img)
+t1b7 = FieldPlayerBehaviour([half_width - 100, half_height - 200], 200)
+team_1.add_player(t1p7, t1b7)
+
+t1p8 = Player("FERRO8", 4, 25, agus_img)
+t1b8 = FieldPlayerBehaviour([half_width - 100, half_height + 200], 200)
+team_1.add_player(t1p8, t1b8)
+
+t1p9 = Player("FERRO9", 4, 25, agus_img)
+t1b9 = FieldPlayerBehaviour([half_width - 100, half_height - 100], 200)
+team_1.add_player(t1p9, t1b9)
+
+t1p10 = Player("FERRO10", 4, 25, agus_img)
+t1b10 = FieldPlayerBehaviour([half_width - 400, half_height + 200], 200)
+team_1.add_player(t1p10, t1b10)
+'''
+t1p11 = Player("FERRO11", 3, 25, agus_img)
+t1b11 = FieldPlayerBehaviour(ST, 200)
+team_1.add_player(t1p11, t1b11)
+'''
 
 field = SoccerField(team_1, team_2, [0,0])
 team_1.set_field(field)
@@ -1575,7 +1601,7 @@ while True:
     seconds = elapsed_time % 60
     current_time = f"{minutes:02d}:{seconds:02d}"
 
-    if current_time == "03:00" and first_set:
+    if current_time == "00:30" and first_set:
         field.change_gametime()
         first_set = False
     time_surface = font.render(current_time, True, (255, 255, 255))
