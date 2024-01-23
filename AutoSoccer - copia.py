@@ -1375,8 +1375,8 @@ class FieldPlayerBehaviour(Behaviour):
                 break
                 
         else:
-            move_up_right = (ball_pos[0] - player_size[0], ball_pos[1] + 3*player_size[0])
-            move_down_right = (ball_pos[0] - player_size[0], ball_pos[1] - 3*player_size[0])
+            move_up_right = (ball_pos[0] - player_size[0], ball_pos[1] + 2*player_size[0])
+            move_down_right = (ball_pos[0] - player_size[0], ball_pos[1] - 2*player_size[0])
             move_backwards = (ball_pos[0] + player_size[0], ball_pos[1])
             move_forward = (ball_pos[0] - player_size[0], ball_pos[1])
 
