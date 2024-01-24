@@ -558,8 +558,8 @@ class Fov:
 
         #distancia cono
         L = (screen_width * screen_height * 45) / 2073600
-        extremo_x = A + self.L * math.cos(zrad)
-        extremo_y = B + self.L * math.sin(zrad)
+        extremo_x = A + L * math.cos(zrad)
+        extremo_y = B + L * math.sin(zrad)
 
         # recta de esos grados desde el punto inicial
         self.extremo = [extremo_x, extremo_y]
@@ -568,22 +568,22 @@ class Fov:
         if(z < 50):
             calculo = z - 50 + 360
             calculoRad = math.radians(calculo)
-            extremo_resta_x = A + self.L * math.cos(calculoRad)
-            extremo_resta_y = B + self.L * math.sin(calculoRad)
+            extremo_resta_x = A + L * math.cos(calculoRad)
+            extremo_resta_y = B + L * math.sin(calculoRad)
         else:
-            extremo_resta_x = A + self.L * math.cos(zrad - RestaSumaRad)
-            extremo_resta_y = B + self.L * math.sin(zrad - RestaSumaRad)
+            extremo_resta_x = A + L * math.cos(zrad - RestaSumaRad)
+            extremo_resta_y = B + L * math.sin(zrad - RestaSumaRad)
         self.extremo_resta = [extremo_resta_x, extremo_resta_y]
 
         #recta de grados mas
         if(z >= 310):
             calculo = z - 360 + 50
             calculoRad = math.radians(calculo)
-            extremo_suma_x = A + self.L * math.cos(calculoRad)
-            extremo_suma_y = B + self.L * math.sin(calculoRad)
+            extremo_suma_x = A + L * math.cos(calculoRad)
+            extremo_suma_y = B + L * math.sin(calculoRad)
         else:
-            extremo_suma_x = A + self.L * math.cos(zrad + RestaSumaRad)
-            extremo_suma_y = B + self.L * math.sin(zrad + RestaSumaRad)
+            extremo_suma_x = A + L * math.cos(zrad + RestaSumaRad)
+            extremo_suma_y = B + L * math.sin(zrad + RestaSumaRad)
             
         self.extremo_suma = [extremo_suma_x, extremo_suma_y]
 
@@ -787,7 +787,7 @@ class Player(threading.Thread, pygame.sprite.Sprite):
     def run(self) -> None:
         while True:
             self.behaviour.flow()
-            time.sleep(1/30)
+            time.sleep(1/60)
 
     def move_arquero(self, angle, speed):
         self.set_vector(vector=(angle, speed))
