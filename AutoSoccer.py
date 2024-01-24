@@ -56,6 +56,7 @@ paqui_img = pygame.image.load("src/img/paqui.png")
 giorgio_img = pygame.image.load("src/img/giorgio.png")
 nahue_img = pygame.image.load("src/img/nahue.png")
 player_8_img = pygame.image.load("src/img/player_8.png")
+player_9_img = pygame.image.load("src/img/player_9.png")
 ball_img = pygame.image.load("src/img/ball_3.png")
 
 ##### GAME POSITIONS ########
@@ -148,7 +149,7 @@ class Ball(pygame.sprite.Sprite):
             angle += 360
         return (-1*angle + 360)
 
-    def alone(self) -> bool: # REVISAR
+    def alone(self) -> bool: 
         player0 = field.get_players_team(0)
         player1 = field.get_players_team(1)
         for i in range(1, len(player0)):
@@ -556,7 +557,7 @@ class Fov:
         RestaSumaRad = math.radians(50)
 
         #distancia cono
-        self.L = (screen_width * screen_height * 45) / 2073600
+        L = (screen_width * screen_height * 45) / 2073600
         extremo_x = A + self.L * math.cos(zrad)
         extremo_y = B + self.L * math.sin(zrad)
 
@@ -663,20 +664,6 @@ class Fov:
         else:
             return False
 
-    def get_ball_pos(self, SoccerField) -> None | Ball:
-        if (self.is_sprite_at_view(SoccerField.get_ball())):
-            return SoccerField.get_ball()
-        else:
-            return None
-
-    def get_teammates_at_view(self, team):
-        teammates = list()
-        for teammate in team.get_players():
-            if(self.pos != teammate.fov.pos):
-                if (self.is_sprite_at_view(teammate)):
-                    teammates.append(teammate)
-        return teammates
-
     def get_angle_to_object(self, target) -> float:
         if(target.pos[1] == self.pos[1]) and (target.pos[0] == self.pos[0]):
             return 0
@@ -702,7 +689,6 @@ class Player(threading.Thread, pygame.sprite.Sprite):
     def __init__(self, name, speed, strength, img_path):
         pygame.sprite.Sprite.__init__(self)
         threading.Thread.__init__(self)
-        self.lock = threading.Lock()
         self.name = name
         self.pos = [0.0,0.0]
         self.speed = speed
@@ -849,7 +835,6 @@ class Player(threading.Thread, pygame.sprite.Sprite):
 class Behaviour():
     def __init__(self, pos:list[float])-> None:
         self.pos = pos
-        self.lock = lockazo
 
     def get_pos(self) -> list[float]:
         return self.pos
@@ -870,7 +855,7 @@ class Behaviour():
         return None
 
     def stop_ball(self):
-        self.player.get_team().get_field().get_ball().stop_ball(self.player.get_side(), self.player)
+        self.player.stop_ball()
 
     def spin(self, angle) -> bool:
         z = 6 # 360grados en 1s
@@ -1038,7 +1023,6 @@ class Behaviour():
 
         self.player.set_speed(0.0)
         self.player.stop_ball()
-        #print(self.player.get_strength())
         if (side == 0):
             if (distance_to_upper < distance_to_bottom):
                 self.player.kick_with_angle(upper_angle + 4, self.player.get_strength())
@@ -1176,8 +1160,7 @@ class GoalkeeperBehaviour(Behaviour):
                 self.action_blind()
         else:
             self.goal_kick()
-            
-            
+                      
     def action_blind(self):
         if(self.player.get_pos()[1] != half_height):
             self.player.move_arquero(self.player.get_fov().get_angle_to_pos([self.pos[0], half_height]), self.player.get_speed()*0.5)
@@ -1225,6 +1208,7 @@ class FieldPlayerBehaviour(Behaviour):
     def __init__(self, pos: list[float], forwarding) -> None:
         super().__init__(pos)
         self.forwarding = forwarding
+        self.lock = lockazo
 
     def try_score(self) -> bool:
         if (
@@ -1257,13 +1241,11 @@ class FieldPlayerBehaviour(Behaviour):
             enemies = self.player.get_team().get_field().get_players_team(enemy_side)
             for i in range(1, len(teammates)):
                 enemy = enemies[i]
-                
                 my_angle = self.player.get_fov().get_angle_to_object(enemy)
                 if(side == 0):
                     if(greatest_angle >= 270) and (my_angle >= greatest_angle):
                         if(least_angle >= 270 and my_angle <= least_angle) or (least_angle <= 270 and my_angle >= least_angle):
                             return False
-                        
                     if(greatest_angle >= my_angle >= least_angle) and greatest_angle < 270:
                         return False
             self.player.set_speed(0.0)
@@ -1483,7 +1465,7 @@ class DefenderBehaviour(FieldPlayerBehaviour):
     def __init__(self, pos: list[float], forwarding) -> None:
         super().__init__(pos, forwarding)
     
-    def reventar(self):
+    def reject_ball(self):
         side = self.player.get_side()
         pos = self.player.get_pos()
         if(side == 0):
@@ -1557,7 +1539,7 @@ class DefenderBehaviour(FieldPlayerBehaviour):
                 target_pass = self.free_teammate(True)
                 if(target_pass == None):
                     if(not self.try_move_forward()):
-                        self.reventar()
+                        self.reject_ball()
                 else:
                     self.aim_and_pass(target_pass) 
             elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() == self.player.get_side()):
@@ -1604,7 +1586,7 @@ class StrikerBehaviour(FieldPlayerBehaviour):
         else:
             self.player.set_speed(0)
 
-    def free_teammate2(self) -> Player:
+    def free_teammate_stk(self) -> Player:
         teammates_at_view = list()
         for teammate in self.player.get_team().get_players():
             if(self.player.get_fov().is_sprite_at_view(teammate)):
@@ -1675,7 +1657,7 @@ class StrikerBehaviour(FieldPlayerBehaviour):
                     self.aim_and_kick()
                 else:
                     if(not self.try_move_forward()): 
-                        target_pass = self.free_teammate2()
+                        target_pass = self.free_teammate_stk()
                         if(target_pass == None):
                             self.player.kick([self.arco_line[0][0], self.arco_line[0][1] + (abs(self.arco_line[1][1] - self.arco_line[0][1]) / 2)], self.player.get_strength())
                         else:
@@ -1848,27 +1830,27 @@ t2p4 = Player("GIANNI4", 6, 25, gianni_img)
 t2b4 = DefenderBehaviour(RB, 150)
 team_2.add_player(t2p4, t2b4)
 
-t2p5 = Player("GIANNI5", 6, 25, player_8_img)
+t2p5 = Player("GIANNI5", 6, 25, player_1_img)
 t2b5 = FieldPlayerBehaviour(CM_L, 200)
 team_2.add_player(t2p5, t2b5)
 
-t2p6 = Player("GIANNI6", 6, 25, player_8_img)
+t2p6 = Player("GIANNI6", 6, 25, player_1_img)
 t2b6 = FieldPlayerBehaviour(CM_M, 200)
 team_2.add_player(t2p6, t2b6)
 
-t2p7 = Player("GIANNI7", 6, 25, player_8_img)
+t2p7 = Player("GIANNI7", 6, 25, player_1_img)
 t2b7 = FieldPlayerBehaviour(CM_R, 200)
 team_2.add_player(t2p7, t2b7)
 
-t2p8 = Player("GIANNI8", 6, 25, player_1_img)
+t2p8 = Player("GIANNI8", 6, 25, player_9_img)
 t2b8 = StrikerBehaviour(LW, 200, [half_width + 0.5*half_width, LW[1]])
 team_2.add_player(t2p8, t2b8)
 
-t2p9 = Player("GIANNI9", 6, 25, player_1_img)
+t2p9 = Player("GIANNI9", 6, 25, player_9_img)
 t2b9 = StrikerBehaviour(RW, 200, [half_width + 0.5*half_width, RW[1]])
 team_2.add_player(t2p9, t2b9)
 
-t2p10 = Player("GIANNI10", 6, 25, player_1_img)
+t2p10 = Player("GIANNI10", 6, 25, player_9_img)
 t2b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_2.add_player(t2p10, t2b10)
 
