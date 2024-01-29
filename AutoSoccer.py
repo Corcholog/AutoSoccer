@@ -1,11 +1,13 @@
 import pygame, sys, threading, random, math, time
 from screeninfo import get_monitors
+
+
 monitor = get_monitors()
 
 screen_width = 1600
 screen_height = 900
-screen_width = monitor[0].width
-screen_height = monitor[0].height
+#screen_width = monitor[0].width
+#screen_height = monitor[0].height
 
 half_height = screen_height / 2
 half_width = screen_width / 2
@@ -24,7 +26,7 @@ field_width = (screen_width * 120) / 140
 field_height = (screen_height * 85) / 100
 
 lockazo = threading.Lock()
-
+lockazo2 = threading.Lock()
 # numeric values that were constants 10 and 8 for a base resolution 1920x1080 rescalated for dynamic res.
 grosor = int(screen_width * screen_height/ 207360)
 grosor2 = int(screen_width * screen_height/ 259200)
@@ -58,7 +60,7 @@ nahue_img = pygame.image.load("src/img/nahue.png")
 player_8_img = pygame.image.load("src/img/player_8.png")
 player_9_img = pygame.image.load("src/img/player_9.png")
 ball_img = pygame.image.load("src/img/ball_3.png")
-
+corcho = pygame.image.load("src/img/corcho.png")
 ##### GAME POSITIONS ########
 
 GK = [screen_width - field_width, half_height]
@@ -107,7 +109,8 @@ class Ball(pygame.sprite.Sprite):
         screen.blit(self.scaled_ball, self.img_rect)
     
     def reset_speed(self) -> None:
-        self.vector = (self.vector[0], 0.0)
+        with self.lock:
+            self.vector = (self.vector[0], 0.0)
 
     def stop_ball(self, team_id, player) -> None:
         with self.lock:
@@ -117,7 +120,7 @@ class Ball(pygame.sprite.Sprite):
                 final = (self.pos[0], self.pos[1])
                 recta = (abs(final[0] - A), abs(final[1] - B))
                 if(recta[0] < 10 and recta[1] < 10):
-                    self.reset_speed()
+                    self.vector = (self.vector[0], 0.0)
                     self.last_touch = team_id
 
     def get_last_touch(self):
@@ -902,7 +905,7 @@ class Behaviour():
             teammate = teammates[i]
             enemy = enemies[i]
 
-            
+
             distance_teammate = math.sqrt(((target[0] - teammate.get_pos()[0])**2 + (target[1]  - teammate.get_pos()[1])**2))
             distance_enemy = math.sqrt(((target[0] - enemy.get_pos()[0])**2 + (target[1]  - enemy.get_pos()[1])**2))
 
@@ -923,16 +926,24 @@ class Behaviour():
         return [the_nearest, nearest_teammate]
     
     def free_path(self, pos:list[float]) -> bool:
-        my_angle = self.player.get_fov().get_angle_to_pos(pos)
-        while not self.spin(my_angle):
-            pass
+
+        if(pos[1] >= field_height or pos[1] <= screen_height - field_height):
+            return False
 
         side = self.player.get_side()
         if side == 0:
+            if(pos[0] >= field_width):
+                return False
             enemy_side = 1
         else:
+            if(pos[0] <= screen_width - field_width):
+                return False
             enemy_side = 0
-
+        
+        my_angle = self.player.get_fov().get_angle_to_pos(pos)
+        while not self.spin(my_angle):
+            pass
+        
         teammates = self.player.get_team().get_field().get_players_team(side)
         enemies = self.player.get_team().get_field().get_players_team(enemy_side)
 
@@ -1255,22 +1266,22 @@ class FieldPlayerBehaviour(Behaviour):
     def try_move_forward(self) -> bool:
         player_pos = self.player.get_pos()
         if(self.player.get_side() == 0):
-            next_move = [player_pos[0] + 2*player_size[0], player_pos[1]]
+            next_move = [player_pos[0] + 5*player_size[0], player_pos[1]]
             if(self.free_path(next_move)):
                 self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                 return True
             else:
-                next_move = [player_pos[0] - 2*player_size[0], player_pos[1]]
+                next_move = [player_pos[0] - 5*player_size[0], player_pos[1]]
                 if(self.free_path(next_move)):
                     self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                     return True
         else:
-            next_move = [player_pos[0] - 2*player_size[0], player_pos[1]]
+            next_move = [player_pos[0] - 5*player_size[0], player_pos[1]]
             if(self.free_path(next_move)):
                 self.move_with_ball(self.player.get_fov().get_angle_to_pos(next_move))
                 return True
             else:
-                next_move = [player_pos[0] + 2*player_size[0], player_pos[1]]
+                next_move = [player_pos[0] + 5*player_size[0], player_pos[1]]
                 if(self.free_path([next_move[0], player_pos[1]])):
                     self.move_with_ball(self.player.get_fov().get_angle_to_pos([next_move[0], player_pos[1]]))
                     return True
@@ -1814,6 +1825,7 @@ t1b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_1.add_player(t1p10, t1b10)
 
 # jugadores team 2
+
 t2p1 = Player("GIANNI1", 6, 25, gianni_img)
 t2b1 = DefenderBehaviour(LB, 150)
 team_2.add_player(t2p1, t2b1)
