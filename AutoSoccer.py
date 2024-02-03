@@ -50,6 +50,17 @@ font = pygame.font.Font(None, font_size)
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
 
+
+p1_df = pygame.image.load("src/img/p1_df.png")
+p1_field = pygame.image.load("src/img/p1_field.png")
+p1_st = pygame.image.load("src/img/p1_st.png")
+p1_gk = pygame.image.load("src/img/p1_gk.png")
+
+p2_df = pygame.image.load("src/img/p2_df.png")
+p2_field = pygame.image.load("src/img/p2_field.png")
+p2_st = pygame.image.load("src/img/p2_st.png")
+p2_gk = pygame.image.load("src/img/p2_gk.png")
+
 player_7_img = pygame.image.load("src/img/player_7.png")
 player_1_img = pygame.image.load("src/img/player_1.png")
 agus_img = pygame.image.load("src/img/agus.png")
@@ -790,7 +801,7 @@ class Player(threading.Thread, pygame.sprite.Sprite):
     def run(self) -> None:
         while True:
             self.behaviour.flow()
-            time.sleep(1/60)
+            time.sleep(1/30)
 
     def move_arquero(self, angle, speed):
         self.set_vector(vector=(angle, speed))
@@ -1774,98 +1785,416 @@ CM_M = [CB_L[0] + 4*player_size[0], ST[1]]
 CM_R = [CB_R[0] + 5*player_size[0], CB_R[1] + 2*player_size[0]]
 
 # arqueros   
-goalkeeper = Player("JUNINHO PERNAMBUCANO", 6, 45, giorgio_img)
+goalkeeper = Player("JUNINHO PERNAMBUCANO", 6, 45, p1_gk)
 behaviour = GoalkeeperBehaviour(GK)
 team_1 = Team("", goalkeeper, behaviour)
 
-player2 = Player("PAQUI", 6, 45, paqui_img)
+player2 = Player("PAQUI", 6, 45, p2_gk)
 behaviour2 = GoalkeeperBehaviour(GK)
 team_2 = Team("", player2, behaviour2)
 
 
 # jugadores team 1
-t1p1 = Player("FERRO1", 6, 25, agus_img)
+t1p1 = Player("FERRO1", 6, 25, p2_df)
 t1b1 = DefenderBehaviour(LB, 150)
 team_1.add_player(t1p1, t1b1)
 
-t1p2 = Player("FERRO2", 6, 25, agus_img)
+t1p2 = Player("FERRO2", 6, 25, p2_df)
 t1b2 = DefenderBehaviour(CB_L, 150)
 team_1.add_player(t1p2, t1b2)
 
-t1p3 = Player("FERRO3", 6, 25, agus_img)
+t1p3 = Player("FERRO3", 6, 25, p2_df)
 t1b3 = DefenderBehaviour(CB_R, 150)
 team_1.add_player(t1p3, t1b3)
 
-t1p4 = Player("FERRO4", 6, 25, agus_img)
+t1p4 = Player("FERRO4", 6, 25, p2_df)
 t1b4 = DefenderBehaviour(RB, 150)
 team_1.add_player(t1p4, t1b4)
 
-t1p5 = Player("FERRO5", 6, 25, player_7_img)
+t1p5 = Player("FERRO5", 6, 25, p2_field)
 t1b5 = FieldPlayerBehaviour(CM_L, 200)
 team_1.add_player(t1p5, t1b5)
 
-t1p6 = Player("FERRO6", 6, 25, player_7_img)
+t1p6 = Player("FERRO6", 6, 25, p2_field)
 t1b6 = FieldPlayerBehaviour(CM_M, 200)
 team_1.add_player(t1p6, t1b6)
 
-t1p7 = Player("FERRO7", 6, 25, player_7_img)
+t1p7 = Player("FERRO7", 6, 25, p2_field)
 t1b7 = FieldPlayerBehaviour(CM_R, 200)
 team_1.add_player(t1p7, t1b7)
 
-t1p8 = Player("FERRO8", 6, 25, nahue_img)
+t1p8 = Player("FERRO8", 6, 25, p2_st)
 t1b8 = StrikerBehaviour(LW, 200, [half_width + 0.5*half_width, LW[1]])
 team_1.add_player(t1p8, t1b8)
 
-t1p9 = Player("FERRO9", 6, 25, nahue_img)
+t1p9 = Player("FERRO9", 6, 25, p2_st)
 t1b9 = StrikerBehaviour(RW, 200, [half_width + 0.5*half_width, RW[1]])
 team_1.add_player(t1p9, t1b9)
 
-t1p10 = Player("FERRO10", 6, 25, nahue_img)
+t1p10 = Player("FERRO10", 6, 25, p2_st)
 t1b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_1.add_player(t1p10, t1b10)
+'''
+class Graph:
+    def __init__(self):
+        self.graph = {}
+        self.lock = threading.Lock()
+
+    def add_edge(self, vertex1, vertex2):
+        player1_pos = vertex1.get_pos()
+        player2_pos = vertex2.get_pos()
+        distance = math.sqrt((player2_pos[0] - player1_pos[0])**2 + (player2_pos[1] - player1_pos[1])**2)
+        self.graph[vertex1][vertex2] = distance
+        self.graph[vertex2][vertex1] = distance
+
+    def add_vertex(self, vertex):
+        if vertex not in self.graph:
+            self.graph[vertex] = {}
+
+    def display(self):
+        for vertex, neighbors in self.graph.items():
+            neighbors_str = ', -> '.join([f"{neighbor.get_name()}: {weight:.2f}" for neighbor, weight in neighbors.items()])
+            print(f"Player {vertex.get_name()} -> {neighbors_str}")
+
+    def get_mid_weight_neighbor(self, player):
+        with self.lock:
+            neighbors = self.graph[player]
+            if neighbors:
+                sorted_neighbors = sorted(neighbors, key=lambda x: self.graph[player][x])
+                mid_index = len(sorted_neighbors) // 2
+                return sorted_neighbors[mid_index]
+
+    def get_min_weight_edge(self, player):
+        with self.lock:
+            neighbors = [neighbor for neighbor in self.graph[player].keys() if neighbor != player]
+            closest_neighbor = min(neighbors, key=lambda x: self.graph[player][x])
+            return closest_neighbor
+
+
+    def update_weights(self, player):
+        with self.lock:
+            new_pos = player.get_pos()
+            for other_player, distance in self.graph[player].items():
+                updated_distance = math.sqrt((new_pos[0] - other_player.get_pos()[0])**2 + (new_pos[1] - other_player.get_pos()[1])**2)
+                self.graph[player][other_player] = updated_distance
+                self.graph[other_player][player] = updated_distance
+
+    def set_all(self):
+        with self.lock:
+            vertexs = list(self.graph.keys())
+            for i in range(len(vertexs)):
+                for j in range(i + 1, len(vertexs)):
+                    self.add_edge(vertexs[i], vertexs[j])
+
+class CorchoDefender(DefenderBehaviour):
+    def __init__(self, pos: list[float], forwarding, team_graph, marked_enemies) -> None:
+        super().__init__(pos, forwarding)
+        self.graph = team_graph
+        self.current_behavior = None
+        self.marked_enemies = marked_enemies
+
+    def set_player(self, player):
+        super().set_player(player)
+        self.graph.add_vertex(self.player)
+
+    def nearest_enemy(self):
+        if self.player.side == 0:
+            enemy_side = 1
+        else:
+            enemy_side = 0
+        enemies = self.player.get_team().get_field().get_players_team(enemy_side)
+
+        nearest_distance = 1920
+        nearest_enemy = None
+        player_pos = self.player.get_pos()
+        for enemy in enemies:
+            distance_enemy = math.sqrt(((player_pos[0] - enemy.get_pos()[0])**2 + (player_pos[1]  - enemy.get_pos()[1])**2))
+            if(distance_enemy < nearest_distance):
+                nearest_distance = distance_enemy
+                nearest_enemy = enemy
+        
+        return nearest_enemy
+
+    def mark_enemy(self, target):
+        if self.player.side == 0:
+            enemy_side = 1
+        else:
+            enemy_side = 0
+        if target not in self.marked_enemies:
+            return target
+        else:
+            for enemy in self.player.get_team().get_field().get_players_team(enemy_side):
+                if enemy not in self.marked_enemies or not self.marked_enemies[enemy]:
+                    self.marked_enemies[enemy] = True
+                    return enemy
+        return None
+
+    def update(self):
+        self.graph.update_weights(self.player)
+
+    def free_teammate(self, forward_pass:bool) -> Player:
+        return self.graph.get_mid_weight_neighbor(self.player)
+        #return self.graph.get_min_weight_edge(self.player)
+
+    def change_behaviour(self, ball):
+        if self.player.get_side() == 0:
+            if ball.get_pos()[0] > half_width :
+                new_b = CorchoFieldPlayer(self.pos, self.forwarding, self.graph, self.marked_enemies)
+                new_b.set_player(self.player)
+                self.player.set_behaviour(new_b)
+                return
+        else:
+            if ball.get_pos()[0] < half_width:
+                new_b = CorchoFieldPlayer(self.pos, self.forwarding, self.graph, self.marked_enemies)
+                new_b.set_player(self.player)
+                self.player.set_behaviour(new_b)
+                return
+
+    def flow(self):
+        self.change_behaviour(self.player.get_team().get_field().get_ball())
+        if(self.player.get_team().get_field().get_state() == "Playing"):
+            ball = self.player.get_team().get_field().get_ball()
+            nearest_to_ball = self.player_has_ball()
+            if (nearest_to_ball[0] == self.player):
+                target_pass = self.free_teammate(True)
+                if(target_pass == None):
+                    if(not self.try_move_forward()):
+                        self.reject_ball()
+                else:
+                    self.aim_and_pass(target_pass) 
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() == self.player.get_side()):
+                self.unmark()
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() != self.player.get_side()):
+                if(nearest_to_ball[1] == self.player):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    if (self.mark() == None):
+                        self.unmark()
+            elif (nearest_to_ball[0] == None) and ((self.player.get_side() == 0 and ball.get_pos()[0] < half_width) or (self.player.get_side() == 1 and ball.get_pos()[0] > half_width)):
+                if(nearest_to_ball[1] == self.player and ball.get_speed() != 0):
+                    self.intercept(self.player.get_speed())
+                elif (nearest_to_ball[1] == self.player and ball.get_speed() == 0):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    self.action_blind()
+        elif(self.player.get_team().get_field().get_state() == "Out of Game"):
+            self.out_of_game()
+        elif(self.player.get_team().get_field().get_state() == "Goal Kick"):
+            self.goal_kick()
+        else:
+            self.score()
+        self.update()
+
+class CorchoFieldPlayer(FieldPlayerBehaviour):
+    def __init__(self, pos: list[float], forwarding, team_graph, marked_enemies) -> None:
+        super().__init__(pos, forwarding)
+        self.graph = team_graph
+        self.current_behavior = None
+        self.marked_enemies = marked_enemies
+        
+    def set_player(self, player):
+        super().set_player(player)
+        self.graph.add_vertex(self.player)
+
+    def update(self):
+        self.graph.update_weights(self.player)
+
+    def free_teammate(self, forward_pass:bool) -> Player:
+        return self.graph.get_min_weight_edge(self.player)
+
+    def change_behaviour(self, ball):
+        if self.player.get_side() == 0:
+            if ball.get_pos()[0] < half_width :
+                new_b = CorchoDefender(self.pos, self.forwarding, self.graph, self.marked_enemies)
+                new_b.set_player(self.player)
+                self.player.set_behaviour(new_b)
+                return
+        else:
+            if ball.get_pos()[0] > half_width:
+                new_b = CorchoDefender(self.pos, self.forwarding, self.graph, self.marked_enemies)
+                new_b.set_player(self.player)
+                self.player.set_behaviour(new_b)
+                return
+
+    def flow(self):
+        if(self.player.get_team().get_field().get_state() == "Playing"):
+            ball = self.player.get_team().get_field().get_ball()
+            self.change_behaviour(ball)
+            nearest_to_ball = self.player_has_ball()
+            if (nearest_to_ball[0] == self.player): 
+                if(self.try_score()):
+                    self.aim_and_kick()
+                else:
+                    target_pass = self.free_teammate(True)
+                    if(not self.player.get_fov().is_sprite_at_view(target_pass)):
+                        if(not self.try_move_forward()):
+
+                            self.aim_and_pass(target_pass) 
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() == self.player.get_side()):
+                self.unmark()
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() != self.player.get_side()):
+                if(nearest_to_ball[1] == self.player):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    self.mark()
+            elif (nearest_to_ball[0] == None):
+                if(nearest_to_ball[1] == self.player and ball.get_speed() != 0):
+                    self.intercept(self.player.get_speed())
+                elif (nearest_to_ball[1] == self.player and ball.get_speed() == 0):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    self.action_blind()
+        elif(self.player.get_team().get_field().get_state() == "Out of Game"):
+            self.out_of_game()
+        elif(self.player.get_team().get_field().get_state() == "Goal Kick"):
+            self.goal_kick()
+        else:
+            self.score()
+        self.update()
+
+    def action_blind(self):
+        if self.player.get_side() == 0:
+            self.player.move(self.player.get_fov().get_angle_to_pos([self.pos[0] + self.forwarding, self.pos[1]]), self.player.get_speed())
+        else:
+            self.player.move(self.player.get_fov().get_angle_to_pos([self.pos[0] - self.forwarding, self.pos[1]]), self.player.get_speed())
+
+class CorchoStriker(StrikerBehaviour):
+    def __init__(self, pos: list[float], forwarding, strike_pos: list[float], team_graph) -> None:
+        super().__init__(pos, forwarding, strike_pos)
+        self.graph = team_graph
+
+    def set_player(self, player):
+        super().set_player(player)
+        self.graph.add_vertex(self.player)
+
+    def update(self):
+        self.graph.update_weights(self.player)
+
+    def free_teammate_stk(self) -> Player:
+        return self.graph.get_min_weight_edge(self.player)
+
+    def flow(self):
+        if(self.player.get_team().get_field().get_state() == "Playing"):
+            ball = self.player.get_team().get_field().get_ball()
+            nearest_to_ball = self.player_has_ball()
+            if (nearest_to_ball[0] == self.player):
+                if(self.try_score()):
+                    self.aim_and_kick()
+                else:
+                    if(not self.try_move_forward()): 
+                        target_pass = self.free_teammate_stk()
+                        if(not self.player.get_fov().is_sprite_at_view(target_pass)):
+                            self.player.kick([self.arco_line[0][0], self.arco_line[0][1] + (abs(self.arco_line[1][1] - self.arco_line[0][1]) / 2)], self.player.get_strength())
+                        else:
+                            self.aim_and_pass(target_pass) 
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() == self.player.get_side()):
+                self.unmark()
+            elif (nearest_to_ball[0] != None) and (nearest_to_ball[0].get_side() != self.player.get_side()):
+                if(nearest_to_ball[1] == self.player):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    self.action_blind()
+            elif (nearest_to_ball[0] == None):
+                if(nearest_to_ball[1] == self.player and ball.get_speed() != 0):
+                    self.intercept(self.player.get_speed())
+                elif (nearest_to_ball[1] == self.player and ball.get_speed() == 0):
+                    angle = self.player.get_fov().get_angle_to_object(ball)
+                    self.player.move(angle, self.player.get_speed())
+                else:
+                    self.action_blind()
+        elif(self.player.get_team().get_field().get_state() == "Out of Game"):
+            self.out_of_game()
+        elif(self.player.get_team().get_field().get_state() == "Goal Kick"):
+            self.goal_kick()
+        else:
+            self.score()
+        self.update()
+
+
+grafolol = Graph()
+behaviourArquero = GoalkeeperBehaviour(GK)
+marked_enemies = dict()
+behaviourC1 = CorchoDefender(LB, 100, grafolol, marked_enemies)
+behaviourC4 = CorchoDefender(RB, 100, grafolol, marked_enemies)
+behaviourC2 = CorchoDefender(CB_L, 200, grafolol, marked_enemies)
+behaviourC3 = CorchoDefender(CB_R, 100, grafolol, marked_enemies)
+behaviourC5 = CorchoFieldPlayer(CM_L, 200, grafolol, marked_enemies)
+behaviourC6 = CorchoFieldPlayer(CM_M, 200, grafolol, marked_enemies)
+behaviourC7 = CorchoFieldPlayer(CM_R, 200, grafolol, marked_enemies)
+behaviourC8 = CorchoStriker(LW, 200, [half_width + 0.5*half_width, LW[1]], grafolol)
+behaviourC9 = CorchoStriker(RW, 200, [half_width + 0.5*half_width, RW[1]], grafolol)
+behaviourC10 = CorchoStriker(ST, 200, [half_width + 0.5*half_width, ST[1]], grafolol)
+corcho1 = Player("Corcho1", 6, 25, p1_df)
+corcho2 = Player("Corcho2", 6, 25, p1_df)
+corcho3 = Player("Corcho3", 6, 25, p1_df)
+corcho4 = Player("Corcho4", 6, 25, p1_df)
+corcho5 = Player("Corcho5", 6, 25, p1_field)
+corcho6 = Player("Corcho6", 6, 25, p1_field)
+corcho7 = Player("Corcho7", 6, 25, p1_field)
+corcho8 = Player("Corcho8", 6, 25, p1_st)
+corcho9 = Player("Corcho9", 6, 25, p1_st)
+corcho10 = Player("Corcho10", 6, 25, p1_st)
+team_2.add_player(corcho1, behaviourC1)
+team_2.add_player(corcho2, behaviourC2)
+team_2.add_player(corcho3, behaviourC3)
+team_2.add_player(corcho4, behaviourC4)
+team_2.add_player(corcho5, behaviourC5)
+team_2.add_player(corcho6, behaviourC6)
+team_2.add_player(corcho7, behaviourC7)
+team_2.add_player(corcho8, behaviourC8)
+team_2.add_player(corcho9, behaviourC9)
+team_2.add_player(corcho10, behaviourC10)
+grafolol.add_vertex(player2)
+grafolol.set_all()
+
+'''
 
 # jugadores team 2
 
-t2p1 = Player("GIANNI1", 6, 25, gianni_img)
+t2p1 = Player("GIANNI1", 6, 25, p1_df)
 t2b1 = DefenderBehaviour(LB, 150)
 team_2.add_player(t2p1, t2b1)
 
-t2p2 = Player("GIANNI2", 6, 25, gianni_img)
+t2p2 = Player("GIANNI2", 6, 25, p1_df)
 t2b2 = DefenderBehaviour(CB_L, 150)
 team_2.add_player(t2p2, t2b2)
 
-t2p3 = Player("GIANNI3", 6, 25, gianni_img)
+t2p3 = Player("GIANNI3", 6, 25, p1_df)
 t2b3 = DefenderBehaviour(CB_R, 150)
 team_2.add_player(t2p3, t2b3)
 
-t2p4 = Player("GIANNI4", 6, 25, gianni_img)
+t2p4 = Player("GIANNI4", 6, 25, p1_df)
 t2b4 = DefenderBehaviour(RB, 150)
 team_2.add_player(t2p4, t2b4)
 
-t2p5 = Player("GIANNI5", 6, 25, player_1_img)
+t2p5 = Player("GIANNI5", 6, 25, p1_field)
 t2b5 = FieldPlayerBehaviour(CM_L, 200)
 team_2.add_player(t2p5, t2b5)
 
-t2p6 = Player("GIANNI6", 6, 25, player_1_img)
+t2p6 = Player("GIANNI6", 6, 25, p1_field)
 t2b6 = FieldPlayerBehaviour(CM_M, 200)
 team_2.add_player(t2p6, t2b6)
 
-t2p7 = Player("GIANNI7", 6, 25, player_1_img)
+t2p7 = Player("GIANNI7", 6, 25, p1_field)
 t2b7 = FieldPlayerBehaviour(CM_R, 200)
 team_2.add_player(t2p7, t2b7)
 
-t2p8 = Player("GIANNI8", 6, 25, player_9_img)
+t2p8 = Player("GIANNI8", 6, 25, p1_st)
 t2b8 = StrikerBehaviour(LW, 200, [half_width + 0.5*half_width, LW[1]])
 team_2.add_player(t2p8, t2b8)
 
-t2p9 = Player("GIANNI9", 6, 25, player_9_img)
+t2p9 = Player("GIANNI9", 6, 25, p1_st)
 t2b9 = StrikerBehaviour(RW, 200, [half_width + 0.5*half_width, RW[1]])
 team_2.add_player(t2p9, t2b9)
 
-t2p10 = Player("GIANNI10", 6, 25, player_9_img)
+t2p10 = Player("GIANNI10", 6, 25, p1_st)
 t2b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_2.add_player(t2p10, t2b10)
-
 
 field = SoccerField(team_1, team_2, [0,0])
 team_1.set_field(field)
@@ -1897,11 +2226,11 @@ while True:
     seconds = elapsed_time % 60
     current_time = f"{minutes:02d}:{seconds:02d}"
 
-    if current_time == "02:00" and first_set:
+    if current_time == "01:00" and first_set:
         field.change_gametime()
         first_set = False
     time_surface = font.render(current_time, True, (255, 255, 255))
     screen.blit(time_surface, (int(field.middle_line[0][0] - (5*font_size/6)), int(field.top_left_corner[1]/2) - (font_size)))
 
-    clock.tick(60)  # limits FPS to 60
+    clock.tick(30)  
     pygame.display.flip()
