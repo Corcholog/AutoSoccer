@@ -1,3 +1,3 @@
 # AutoSoccer
 
-College project for MicroDesign 
+University project for MicroDesign 
