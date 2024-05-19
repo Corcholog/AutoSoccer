@@ -25,7 +25,7 @@ ball_size = [(screen_width * screen_height * 40) / 2073600, (screen_width * scre
 field_width = (screen_width * 120) / 140
 field_height = (screen_height * 85) / 100
 
-lockazo = threading.Lock()
+players_lock = threading.Lock()
 lockazo2 = threading.Lock()
 # numeric values that were constants 10 and 8 for a base resolution 1920x1080 rescalated for dynamic res.
 grosor = int(screen_width * screen_height/ 207360)
@@ -61,17 +61,8 @@ p2_field = pygame.image.load("src/img/p2_field.png")
 p2_st = pygame.image.load("src/img/p2_st.png")
 p2_gk = pygame.image.load("src/img/p2_gk.png")
 
-player_7_img = pygame.image.load("src/img/player_7.png")
-player_1_img = pygame.image.load("src/img/player_1.png")
-agus_img = pygame.image.load("src/img/agus.png")
-gianni_img = pygame.image.load("src/img/gianni.png")
-paqui_img = pygame.image.load("src/img/paqui.png")
-giorgio_img = pygame.image.load("src/img/giorgio.png")
-nahue_img = pygame.image.load("src/img/nahue.png")
-player_8_img = pygame.image.load("src/img/player_8.png")
-player_9_img = pygame.image.load("src/img/player_9.png")
 ball_img = pygame.image.load("src/img/ball_3.png")
-corcho = pygame.image.load("src/img/corcho.png")
+
 ##### GAME POSITIONS ########
 
 GK = [screen_width - field_width, half_height]
@@ -206,7 +197,7 @@ class Ball(pygame.sprite.Sprite):
             
     def apply_smooth_friction(self, vector):
         angle, z = vector
-        z *= (1.059 - self.coef) # 1 es demasiado y 1.1 tambien
+        z *= (1.059 - self.coef)
         if(int(z) == 0):
             return angle, 0.0
         return angle, z
@@ -327,7 +318,7 @@ class SoccerField:
     def get_ball(self) -> Ball:
         return self.ball
 
-    def get_players(self) -> list():
+    def get_players(self) -> list:
         players = list()
         for player in self.get_players_team(1):
             players.append(player)
@@ -335,7 +326,7 @@ class SoccerField:
             players.append(player)
         return players
 
-    def get_players_team(self, team) -> list():
+    def get_players_team(self, team) -> list:
         if(team == 1):
             return self.team_2.get_players()
         else:
@@ -617,7 +608,6 @@ class Fov:
         self.angle = angle
 
     def is_sprite_at_view(self, sprite):
-        # cambiar nombre a bottom_right
         third_part_field = field_width/3
         half_field_height = field_height/2
 
@@ -625,55 +615,38 @@ class Fov:
         original_surface = pygame.Surface((third_part_field, half_field_height), pygame.SRCALPHA)
         bottom_right_rect = original_surface.get_rect(center=fov_rect.center)
         bottom_right_rect.topleft = [self.pos[0], self.pos[1]]
-        #screen.blit(original_surface, bottom_right_rect.topleft)
 
         if 50 >= self.angle >= 40:
-            #print("cuadrante 1")
             return bottom_right_rect.colliderect(sprite.get_rect())
         
         elif 140 >= self.angle >= 130:
-            #print("cuadrante 2")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
             return bottom_left_rect.colliderect(sprite.get_rect())
         
         elif 230 >= self.angle >= 220:
-            #print("cuadrante 3")
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
             return upper_left_rect.colliderect(sprite.get_rect())
          
         elif 320 >= self.angle >= 310:
-            #print("cuadrante 4")
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
             return upper_right_rect.colliderect(sprite.get_rect())
 
         elif 45 < self.angle < 135:
-            #print("cuadrante 1 y 2")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
-            #print("¿Hay colisión con el rectángulo 1?", bottom_right_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 2?", bottom_left_rect.colliderect(sprite.get_rect()))
             return bottom_right_rect.colliderect(sprite.get_rect()) or bottom_left_rect.colliderect(sprite.get_rect())
             
         elif 225 > self.angle > 135:
-            #print("cuadrante 2 y 3")
             bottom_left_rect = bottom_right_rect.move(-bottom_right_rect.width, 0)
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 2?", bottom_left_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 3?", upper_left_rect.colliderect(sprite.get_rect()))
             return bottom_left_rect.colliderect(sprite.get_rect()) or upper_left_rect.colliderect(sprite.get_rect())
 
         elif 315 > self.angle > 225:
-            #print("cuadrante 3 y 4")
             upper_left_rect = bottom_right_rect.move(-bottom_right_rect.width, -bottom_right_rect.height)
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 3?", upper_left_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 4?", upper_right_rect.colliderect(sprite.get_rect()))
             return upper_left_rect.colliderect(sprite.get_rect()) or upper_right_rect.colliderect(sprite.get_rect())
             
         elif 45 > self.angle or self.angle > 315:
-            #print("cuadrante 4 y 1")
             upper_right_rect = bottom_right_rect.move(0, -bottom_right_rect.height)
-            #print("¿Hay colisión con el rectángulo 1?", bottom_right_rect.colliderect(sprite.get_rect()))
-            #print("¿Hay colisión con el rectángulo 4?", upper_right_rect.colliderect(sprite.get_rect()))
             return bottom_right_rect.colliderect(sprite.get_rect()) or upper_right_rect.colliderect(sprite.get_rect())
         else:
             return False
@@ -1230,7 +1203,7 @@ class FieldPlayerBehaviour(Behaviour):
     def __init__(self, pos: list[float], forwarding) -> None:
         super().__init__(pos)
         self.forwarding = forwarding
-        self.lock = lockazo
+        self.lock = players_lock
 
     def try_score(self) -> bool:
         if (
@@ -1794,44 +1767,44 @@ behaviour2 = GoalkeeperBehaviour(GK)
 team_2 = Team("", player2, behaviour2)
 
 
-# jugadores team 1
-t1p1 = Player("FERRO1", 6, 25, p2_df)
+# players team 1
+t1p1 = Player("t1p1", 6, 25, p2_df)
 t1b1 = DefenderBehaviour(LB, 150)
 team_1.add_player(t1p1, t1b1)
 
-t1p2 = Player("FERRO2", 6, 25, p2_df)
+t1p2 = Player("t1p2", 6, 25, p2_df)
 t1b2 = DefenderBehaviour(CB_L, 150)
 team_1.add_player(t1p2, t1b2)
 
-t1p3 = Player("FERRO3", 6, 25, p2_df)
+t1p3 = Player("t1p3", 6, 25, p2_df)
 t1b3 = DefenderBehaviour(CB_R, 150)
 team_1.add_player(t1p3, t1b3)
 
-t1p4 = Player("FERRO4", 6, 25, p2_df)
+t1p4 = Player("t1p4", 6, 25, p2_df)
 t1b4 = DefenderBehaviour(RB, 150)
 team_1.add_player(t1p4, t1b4)
 
-t1p5 = Player("FERRO5", 6, 25, p2_field)
+t1p5 = Player("t1p5", 6, 25, p2_field)
 t1b5 = FieldPlayerBehaviour(CM_L, 200)
 team_1.add_player(t1p5, t1b5)
 
-t1p6 = Player("FERRO6", 6, 25, p2_field)
+t1p6 = Player("t1p6", 6, 25, p2_field)
 t1b6 = FieldPlayerBehaviour(CM_M, 200)
 team_1.add_player(t1p6, t1b6)
 
-t1p7 = Player("FERRO7", 6, 25, p2_field)
+t1p7 = Player("t1p7", 6, 25, p2_field)
 t1b7 = FieldPlayerBehaviour(CM_R, 200)
 team_1.add_player(t1p7, t1b7)
 
-t1p8 = Player("FERRO8", 6, 25, p2_st)
+t1p8 = Player("t1p8", 6, 25, p2_st)
 t1b8 = StrikerBehaviour(LW, 200, [half_width + 0.5*half_width, LW[1]])
 team_1.add_player(t1p8, t1b8)
 
-t1p9 = Player("FERRO9", 6, 25, p2_st)
+t1p9 = Player("t1p9", 6, 25, p2_st)
 t1b9 = StrikerBehaviour(RW, 200, [half_width + 0.5*half_width, RW[1]])
 team_1.add_player(t1p9, t1b9)
 
-t1p10 = Player("FERRO10", 6, 25, p2_st)
+t1p10 = Player("t1p10", 6, 25, p2_st)
 t1b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_1.add_player(t1p10, t1b10)
 '''
@@ -2154,45 +2127,45 @@ grafolol.set_all()
 
 '''
 
-# jugadores team 2
+# players team 2
 
-t2p1 = Player("GIANNI1", 6, 25, p1_df)
+t2p1 = Player("t2p1", 6, 25, p1_df)
 t2b1 = DefenderBehaviour(LB, 150)
 team_2.add_player(t2p1, t2b1)
 
-t2p2 = Player("GIANNI2", 6, 25, p1_df)
+t2p2 = Player("t2p2", 6, 25, p1_df)
 t2b2 = DefenderBehaviour(CB_L, 150)
 team_2.add_player(t2p2, t2b2)
 
-t2p3 = Player("GIANNI3", 6, 25, p1_df)
+t2p3 = Player("t2p3", 6, 25, p1_df)
 t2b3 = DefenderBehaviour(CB_R, 150)
 team_2.add_player(t2p3, t2b3)
 
-t2p4 = Player("GIANNI4", 6, 25, p1_df)
+t2p4 = Player("t2p4", 6, 25, p1_df)
 t2b4 = DefenderBehaviour(RB, 150)
 team_2.add_player(t2p4, t2b4)
 
-t2p5 = Player("GIANNI5", 6, 25, p1_field)
+t2p5 = Player("t2p5", 6, 25, p1_field)
 t2b5 = FieldPlayerBehaviour(CM_L, 200)
 team_2.add_player(t2p5, t2b5)
 
-t2p6 = Player("GIANNI6", 6, 25, p1_field)
+t2p6 = Player("t2p6", 6, 25, p1_field)
 t2b6 = FieldPlayerBehaviour(CM_M, 200)
 team_2.add_player(t2p6, t2b6)
 
-t2p7 = Player("GIANNI7", 6, 25, p1_field)
+t2p7 = Player("t2p7", 6, 25, p1_field)
 t2b7 = FieldPlayerBehaviour(CM_R, 200)
 team_2.add_player(t2p7, t2b7)
 
-t2p8 = Player("GIANNI8", 6, 25, p1_st)
+t2p8 = Player("t2p8", 6, 25, p1_st)
 t2b8 = StrikerBehaviour(LW, 200, [half_width + 0.5*half_width, LW[1]])
 team_2.add_player(t2p8, t2b8)
 
-t2p9 = Player("GIANNI9", 6, 25, p1_st)
+t2p9 = Player("t2p9", 6, 25, p1_st)
 t2b9 = StrikerBehaviour(RW, 200, [half_width + 0.5*half_width, RW[1]])
 team_2.add_player(t2p9, t2b9)
 
-t2p10 = Player("GIANNI10", 6, 25, p1_st)
+t2p10 = Player("t2p10", 6, 25, p1_st)
 t2b10 = StrikerBehaviour(ST, 200, [half_width + 0.5*half_width, ST[1]])
 team_2.add_player(t2p10, t2b10)
 
